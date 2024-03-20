@@ -33,10 +33,10 @@ func main() {
 			conn.Write(bytes.ToUpper(buffer[:count]))
 		} else if typeStr == "4" {
 			duration := time.Since(start)
-			hour := int(duration.Hours())
-			minute := int(duration.Minutes())
-			second := int(duration.Seconds())
-			fmt.Printf("%2d:%2d:%2d\n", hour, minute, second)
+			hour := int(duration.Seconds() / 3600)
+    		minute := int(duration.Seconds()/60) % 60
+    		second := int(duration.Seconds()) % 60
+    		fmt.Printf("%02d:%02d:%02d\n", hour, minute, second)
 		}
 		conn.Close()
 	}
