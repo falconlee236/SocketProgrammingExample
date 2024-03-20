@@ -29,9 +29,11 @@ func main() {
 		fmt.Printf("Command %s\n", typeStr)
 
 		if typeStr == "1" {
+			fmt.Print("this is 1\n")
 			count, _ := conn.Read(buffer)
 			conn.Write(bytes.ToUpper(buffer[:count]))
 		} else if typeStr == "4" {
+			fmt.Print("this is 4\n")
 			duration := time.Since(start)
 			//conn.Write(duration)
 			fmt.Println(duration)
