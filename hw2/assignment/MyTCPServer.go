@@ -25,7 +25,7 @@ func main() {
 		fmt.Printf("Connection request from %s\n", conn.RemoteAddr().String())
 
 		t, _ := conn.Read(typeBuffer)
-		typeStr := string(typeBuffer[:t - 1])
+		typeStr := string(typeBuffer[:t-1])
 		fmt.Printf("Command %s\n", typeStr)
 
 		if typeStr == "1" {
@@ -33,8 +33,10 @@ func main() {
 			conn.Write(bytes.ToUpper(buffer[:count]))
 		} else if typeStr == "4" {
 			duration := time.Since(start)
-			//conn.Write(duration)
-			fmt.Println(duration)
+			hour := int(duration.Hours())
+			minute := int(duration.Minutes())
+			second := int(duration.Seconds())
+			fmt.Printf("%2d:%2d:%2d\n", hour, minute, second)
 		}
 		conn.Close()
 	}
