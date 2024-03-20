@@ -31,6 +31,8 @@ func main() {
 		if typeStr == "1" {
 			count, _ := conn.Read(buffer)
 			conn.Write(bytes.ToUpper(buffer[:count]))
+		} else if typeStr == "2" {
+			conn.Write([]byte(conn.RemoteAddr().String()))
 		} else if typeStr == "4" {
 			duration := time.Since(start)
 			hour := int(duration.Seconds() / 3600)

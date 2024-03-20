@@ -46,7 +46,8 @@ func main() {
 	if strings.TrimRight(input_option, "\n") == "1" {
 		fmt.Printf("\nReply from server: %s", string(buffer))
 	} else if strings.TrimRight(input_option, "\n") == "2" {
-		fmt.Printf("\nReply from server: run time = %s", string(buffer))
+		recInfo := strings.Split(string(buffer), ":")
+		fmt.Printf("\nReply from server: client IP = %s PORT = %s", recInfo[0], recInfo[1])
 	} else if strings.TrimRight(input_option, "\n") == "3" {
 		fmt.Printf("\nReply from server: %s", string(buffer))
 	} else if strings.TrimRight(input_option, "\n") == "4" {
