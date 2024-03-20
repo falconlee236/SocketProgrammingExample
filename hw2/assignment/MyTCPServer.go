@@ -34,9 +34,10 @@ func main() {
 		} else if typeStr == "4" {
 			duration := time.Since(start)
 			hour := int(duration.Seconds() / 3600)
-    		minute := int(duration.Seconds()/60) % 60
-    		second := int(duration.Seconds()) % 60
-    		fmt.Printf("%02d:%02d:%02d\n", hour, minute, second)
+			minute := int(duration.Seconds()/60) % 60
+			second := int(duration.Seconds()) % 60
+			totalRuntime := fmt.Sprintf("%02d:%02d:%02d\n", hour, minute, second)
+			conn.Write([]byte(totalRuntime))
 		}
 		conn.Close()
 	}
