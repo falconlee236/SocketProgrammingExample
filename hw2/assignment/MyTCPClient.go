@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -30,15 +31,27 @@ func main() {
 	fmt.Printf("5) exit\n")
 	fmt.Printf("Input option: ")
 	input_option, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+	start := time.Now()
 	conn.Write([]byte(input_option))
 
 	if strings.TrimRight(input_option, "\n") == "1" {
 		fmt.Printf("Input lowercase sentence: ")
 		input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+		start = time.Now()
 		conn.Write([]byte(input))
 	}
 	buffer := make([]byte, 1024)
 	conn.Read(buffer)
-	fmt.Printf("Reply from server: %s", string(buffer))
+	duration := time.Since(start)
+	if strings.TrimRight(input_option, "\n") == "1" {
+		fmt.Printf("\nReply from server: %s", string(buffer))
+	} else if strings.TrimRight(input_option, "\n") == "2" {
+		fmt.Printf("\nReply from server: run time = %s", string(buffer))
+	} else if strings.TrimRight(input_option, "\n") == "3" {
+		fmt.Printf("\nReply from server: %s", string(buffer))
+	} else if strings.TrimRight(input_option, "\n") == "4" {
+		fmt.Printf("\nReply from server: run time = %s", string(buffer))
+	}
+	fmt.Printf("RTT = %s\n", duration)
 	conn.Close()
 }
