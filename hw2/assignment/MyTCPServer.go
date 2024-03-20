@@ -27,6 +27,10 @@ func main() {
 		fmt.Printf("Connection request from %s\n", conn.RemoteAddr().String())
 
 		t, _ := conn.Read(typeBuffer)
+		if t == 0 {
+			fmt.Print("Bye bye~\n")
+			continue
+		}
 		typeStr := string(typeBuffer[:t-1])
 		fmt.Printf("Command %s\n", typeStr)
 

@@ -21,7 +21,7 @@ func main() {
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		for sig := range c {
-			log.Printf("captured %v, stopping profiler and exiting..\n", sig)
+			log.Printf("captured %v\n", sig)
 			fmt.Print("Bye bye~\n")
 			os.Exit(1)
 		}
