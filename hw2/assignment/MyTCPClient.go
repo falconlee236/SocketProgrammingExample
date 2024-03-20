@@ -31,17 +31,14 @@ func main() {
 	fmt.Printf("Input option: ")
 	input_option, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 	conn.Write([]byte(input_option))
-	fmt.Printf(input_option)
 
 	if strings.TrimRight(input_option, "\n") == "1" {
 		fmt.Printf("Input lowercase sentence: ")
 		input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 		conn.Write([]byte(input))
-
-		buffer := make([]byte, 1024)
-		conn.Read(buffer)
-		fmt.Printf("Reply from server: %s", string(buffer))
-
-		conn.Close()
 	}
+	buffer := make([]byte, 1024)
+	conn.Read(buffer)
+	fmt.Printf("Reply from server: %s", string(buffer))
+	conn.Close()
 }
