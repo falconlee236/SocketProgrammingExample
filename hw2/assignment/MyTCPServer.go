@@ -1,5 +1,6 @@
 /**
- * TCPServer.go
+ * MyTCPServer.go
+20190532 sangyunLee
  **/
 
 package main

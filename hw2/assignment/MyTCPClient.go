@@ -1,5 +1,6 @@
 /*
- * TCPClient.go
+ * MyTCPClient.go
+20190532 sangyunLee
  **/
 
 package main
