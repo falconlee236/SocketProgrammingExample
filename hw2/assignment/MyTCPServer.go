@@ -7,12 +7,25 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net"
+	"os"
+	"os/signal"
 	"strconv"
 	"time"
 )
 
 func main() {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for sig := range c {
+			log.Printf("captured %v\n", sig)
+			fmt.Print("Bye bye~\n")
+			os.Exit(1)
+		}
+	}()
+
 	start := time.Now()
 	reqNum := 0
 	serverPort := "20532"
@@ -28,7 +41,6 @@ func main() {
 
 		t, _ := conn.Read(typeBuffer)
 		if t == 0 {
-			fmt.Print("Bye bye~\n")
 			continue
 		}
 		typeStr := string(typeBuffer[:t-1])
