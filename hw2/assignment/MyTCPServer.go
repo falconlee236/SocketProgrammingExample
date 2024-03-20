@@ -8,11 +8,13 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"strconv"
 	"time"
 )
 
 func main() {
 	start := time.Now()
+	reqNum := 0
 	serverPort := "20532"
 
 	listener, _ := net.Listen("tcp", ":"+serverPort)
@@ -33,6 +35,8 @@ func main() {
 			conn.Write(bytes.ToUpper(buffer[:count]))
 		} else if typeStr == "2" {
 			conn.Write([]byte(conn.RemoteAddr().String()))
+		} else if typeStr == "3" {
+			conn.Write([]byte(strconv.Itoa(reqNum)))
 		} else if typeStr == "4" {
 			duration := time.Since(start)
 			hour := int(duration.Seconds() / 3600)
@@ -41,6 +45,7 @@ func main() {
 			totalRuntime := fmt.Sprintf("%02d:%02d:%02d\n", hour, minute, second)
 			conn.Write([]byte(totalRuntime))
 		}
+		reqNum++
 		conn.Close()
 	}
 }
