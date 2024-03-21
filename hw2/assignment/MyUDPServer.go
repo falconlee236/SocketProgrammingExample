@@ -41,6 +41,8 @@ func UDPClientHandler(conn net.PacketConn, reqNum int, start time.Time) {
 	buffer := make([]byte, 1024)
 
 	for {
+		//pconn, _ := net.ListenPacket("udp", ":"+serverPort)
+		//fmt.Printf("Server is ready to receive on port %s\n", serverPort)
 		count, r_addr, _ := conn.ReadFrom(typeBuffer)
 		if count == 0 {
 			return
