@@ -57,17 +57,18 @@ func main() {
 		//write to server
 		start := time.Now()
 		server_addr, _ := net.ResolveUDPAddr("udp", serverName+":"+serverPort)
-		pconn.WriteTo([]byte(inputOption), server_addr)
+		pconn.WriteTo([]byte(inputOption), server_addr) // to server - 1
 
 		if strings.TrimRight(inputOption, "\n") == "1" {
 			fmt.Printf("Input lowercase sentence: ")
 			input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 			start = time.Now()
-			pconn.WriteTo([]byte(input), server_addr)
+			s_addr, _ := net.ResolveUDPAddr("udp", serverName+":"+serverPort)
+			pconn.WriteTo([]byte(input), s_addr) // to server - 2
 		}
 		// read from server
 		buffer := make([]byte, 1024)
-		read, _, err := pconn.ReadFrom(buffer)
+		read, _, err := pconn.ReadFrom(buffer) //from server - 3
 		if err != nil || read == 0 {
 			log.Fatalf("Failed to connect to server: %v", err)
 			return
