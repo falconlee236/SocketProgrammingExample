@@ -38,7 +38,7 @@ func main() {
 		if count == 0 {
 			return
 		}
-		fmt.Printf("UDP message from %s\n", r_addr.String())
+		fmt.Printf("Connection request from %s\n", r_addr.String())
 		typeStr := string(typeBuffer[:count-1])
 		fmt.Printf("Command %s\n", typeStr)
 

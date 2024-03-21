@@ -57,6 +57,7 @@ func main() {
 		//write to server
 		start := time.Now()
 		server_addr, _ := net.ResolveUDPAddr("udp", serverName+":"+serverPort)
+		fmt.Print(server_addr)
 		pconn.WriteTo([]byte(inputOption), server_addr) // to server - 1
 
 		if strings.TrimRight(inputOption, "\n") == "1" {
@@ -88,6 +89,5 @@ func main() {
 			return
 		}
 		fmt.Printf("RTT = %dms\n", duration.Milliseconds())
-		pconn.Close()
 	}
 }
