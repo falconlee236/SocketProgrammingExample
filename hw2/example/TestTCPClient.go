@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	socket, err := net.Dial("tcp", "localhost:18080")
+	socket, err := net.Dial("tcp", "nsl5.cau.ac.kr:20532")
 	if err != nil {
 		log.Fatalf("Failed to connect to server: %v", err)
 		return

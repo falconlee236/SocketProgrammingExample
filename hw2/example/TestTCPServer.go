@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	sock, err := net.Listen("tcp", ":18080")
+	sock, err := net.Listen("tcp", "nsl5.cau.ac.kr:20532")
 	if err != nil {
 		log.Fatalf("Failed to bind address: %v", err)
 	}
