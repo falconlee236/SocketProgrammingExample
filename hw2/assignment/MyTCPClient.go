@@ -28,7 +28,7 @@ func main() {
 		}
 	}()
 
-	serverName := "nsl5.cau.ac.kr"
+	serverName := "nsl2.cau.ac.kr"
 	serverPort := "20532"
 
 	conn, err := net.Dial("tcp", serverName+":"+serverPort)
@@ -84,6 +84,6 @@ func main() {
 			fmt.Print("Bye bye~\n")
 			return
 		}
-		fmt.Printf("RTT = %d\n", duration.Milliseconds())
+		fmt.Printf("RTT = %d\nms", duration.Milliseconds())
 	}
 }
