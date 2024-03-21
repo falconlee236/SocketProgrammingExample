@@ -74,8 +74,7 @@ func ClientHandler(conn net.Conn, reqNum int, start time.Time) {
 			totalRuntime := fmt.Sprintf("%02d:%02d:%02d\n", hour, minute, second)
 			conn.Write([]byte(totalRuntime))
 		} else if typeStr == "5" {
-			fmt.Print("inside 5")
-			conn.Write(nil)
+			conn.Write([]byte("-1"))
 		}
 		reqNum++
 	}
