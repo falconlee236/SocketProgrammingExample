@@ -12,6 +12,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -48,12 +49,16 @@ func main() {
 		fmt.Printf("4) get server running time\n")
 		fmt.Printf("5) exit\n")
 		fmt.Printf("Input option: ")
-		input_option, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-
+		inputOption, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+		inputNum, _ := strconv.Atoi(strings.TrimRight(inputOption, "\n"))
+		if inputNum < 1 || inputNum > 5 {
+			fmt.Print("Invalid option\n")
+			continue
+		}
 		start := time.Now()
-		conn.Write([]byte(input_option))
+		conn.Write([]byte(inputOption))
 
-		if strings.TrimRight(input_option, "\n") == "1" {
+		if strings.TrimRight(inputOption, "\n") == "1" {
 			fmt.Printf("Input lowercase sentence: ")
 			input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 			start = time.Now()
@@ -61,22 +66,21 @@ func main() {
 		}
 		buffer := make([]byte, 1024)
 		read, err := conn.Read(buffer)
-		fmt.Print("after buffer")
 		if err != nil || read == 0 {
 			log.Fatalf("Failed to connect to server: %v", err)
 			return
 		}
 		duration := time.Since(start)
-		if strings.TrimRight(input_option, "\n") == "1" {
+		if strings.TrimRight(inputOption, "\n") == "1" {
 			fmt.Printf("\nReply from server: %s", string(buffer))
-		} else if strings.TrimRight(input_option, "\n") == "2" {
+		} else if strings.TrimRight(inputOption, "\n") == "2" {
 			recInfo := strings.Split(string(buffer), ":")
 			fmt.Printf("\nReply from server: client IP = %s PORT = %s\n", recInfo[0], recInfo[1])
-		} else if strings.TrimRight(input_option, "\n") == "3" {
+		} else if strings.TrimRight(inputOption, "\n") == "3" {
 			fmt.Printf("\nReply from server: requests served = %s\n", string(buffer))
-		} else if strings.TrimRight(input_option, "\n") == "4" {
+		} else if strings.TrimRight(inputOption, "\n") == "4" {
 			fmt.Printf("\nReply from server: run time = %s", string(buffer))
-		} else if strings.TrimRight(input_option, "\n") == "5" {
+		} else if strings.TrimRight(inputOption, "\n") == "5" {
 			fmt.Print("Bye bye~\n")
 			return
 		}
