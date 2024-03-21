@@ -41,11 +41,11 @@ func main() {
 			break
 		}
 
-		go ClientHandler(conn, reqNum, start)
+		go TCPClientHandler(conn, reqNum, start)
 	}
 }
 
-func ClientHandler(conn net.Conn, reqNum int, start time.Time) {
+func TCPClientHandler(conn net.Conn, reqNum int, start time.Time) {
 	defer conn.Close()
 
 	typeBuffer := make([]byte, 1024)
