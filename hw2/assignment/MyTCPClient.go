@@ -84,6 +84,6 @@ func main() {
 			fmt.Print("Bye bye~\n")
 			return
 		}
-		fmt.Printf("RTT = %s\n", duration)
+		fmt.Printf("RTT = %d\n", duration.Milliseconds())
 	}
 }
