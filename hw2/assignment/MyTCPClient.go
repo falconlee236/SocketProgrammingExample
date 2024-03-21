@@ -46,6 +46,7 @@ func main() {
 		fmt.Printf("5) exit\n")
 		fmt.Printf("Input option: ")
 		input_option, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+		fmt.Printf("%s\n", input_option)
 		start := time.Now()
 		conn.Write([]byte(input_option))
 
