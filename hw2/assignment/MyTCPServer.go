@@ -37,8 +37,10 @@ func main() {
 	buffer := make([]byte, 1024)
 
 	for {
+		fmt.Print("start\n")
 		conn, _ := listener.Accept()
 		fmt.Printf("Connection request from %s\n", conn.RemoteAddr().String())
+		defer conn.Close()
 
 		t, _ := conn.Read(typeBuffer)
 		if t == 0 {
@@ -63,6 +65,5 @@ func main() {
 			conn.Write([]byte(totalRuntime))
 		}
 		reqNum++
-		conn.Close()
 	}
 }
