@@ -33,22 +33,30 @@ func main() {
 
 	listener, _ := net.Listen("tcp", ":"+serverPort)
 	fmt.Printf("Server is ready to receive on port %s\n", serverPort)
-	typeBuffer := make([]byte, 1024)
-	buffer := make([]byte, 1024)
 
 	defer listener.Close()
-	fmt.Print(listener)
 	for {
-		fmt.Print("start\n")
 		conn, err := listener.Accept()
 		fmt.Printf("Connection request from %s\n", conn.RemoteAddr().String())
 		if err != nil {
 			fmt.Println(err)
 			break
 		}
+
+		go ClientHandler(conn, reqNum, start)
+	}
+}
+
+func ClientHandler(conn net.Conn, reqNum int, start time.Time) {
+	defer conn.Close()
+
+	typeBuffer := make([]byte, 1024)
+	buffer := make([]byte, 1024)
+
+	for {
 		t, _ := conn.Read(typeBuffer)
 		if t == 0 {
-			continue
+			return
 		}
 		typeStr := string(typeBuffer[:t-1])
 		fmt.Printf("Command %s\n", typeStr)
@@ -69,6 +77,5 @@ func main() {
 			conn.Write([]byte(totalRuntime))
 		}
 		reqNum++
-		conn.Close()
 	}
 }
