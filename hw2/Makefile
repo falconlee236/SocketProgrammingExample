@@ -2,7 +2,7 @@
 SRC_DIR := java_example
 
 # output directory
-OUT_DIR := out
+OUT_DIR := .
 
 # sources
 SRCS := $(wildcard $(SRC_DIR)/*.java)
