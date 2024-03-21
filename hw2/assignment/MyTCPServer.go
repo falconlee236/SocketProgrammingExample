@@ -36,12 +36,16 @@ func main() {
 	typeBuffer := make([]byte, 1024)
 	buffer := make([]byte, 1024)
 
+	defer listener.Close()
+	fmt.Print(listener)
 	for {
 		fmt.Print("start\n")
-		conn, _ := listener.Accept()
+		conn, err := listener.Accept()
 		fmt.Printf("Connection request from %s\n", conn.RemoteAddr().String())
-		defer conn.Close()
-
+		if err != nil {
+			fmt.Println(err)
+			break
+		}
 		t, _ := conn.Read(typeBuffer)
 		if t == 0 {
 			continue
@@ -65,5 +69,6 @@ func main() {
 			conn.Write([]byte(totalRuntime))
 		}
 		reqNum++
+		conn.Close()
 	}
 }
