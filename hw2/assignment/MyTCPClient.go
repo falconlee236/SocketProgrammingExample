@@ -61,6 +61,7 @@ func main() {
 		}
 		buffer := make([]byte, 1024)
 		read, err := conn.Read(buffer)
+		fmt.Print("after buffer")
 		if err != nil || read == 0 {
 			log.Fatalf("Failed to connect to server: %v", err)
 			return
