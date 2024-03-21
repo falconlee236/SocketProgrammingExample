@@ -28,10 +28,9 @@ func main() {
 	start := time.Now()
 	reqNum := 0
 	serverPort := "20532"
-
+	pconn, _ := net.ListenPacket("udp", ":"+serverPort)
+	fmt.Printf("Server is ready to receive on port %s\n", serverPort)
 	for {
-		pconn, _ := net.ListenPacket("udp", ":"+serverPort)
-		fmt.Printf("Server is ready to receive on port %s\n", serverPort)
 
 		typeBuffer := make([]byte, 1024)
 		buffer := make([]byte, 1024)
@@ -39,6 +38,7 @@ func main() {
 		if count == 0 {
 			return
 		}
+		fmt.Printf("UDP message from %s\n", r_addr.String())
 		typeStr := string(typeBuffer[:count-1])
 		fmt.Printf("Command %s\n", typeStr)
 
