@@ -8,7 +8,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"os/signal"
@@ -20,9 +19,8 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
-		for sig := range c {
-			log.Printf("captured %v\n", sig)
-			fmt.Print("Bye bye~\n")
+		for range c {
+			fmt.Print("\nBye bye~\n")
 			os.Exit(1)
 		}
 	}()
@@ -75,6 +73,8 @@ func ClientHandler(conn net.Conn, reqNum int, start time.Time) {
 			second := int(duration.Seconds()) % 60
 			totalRuntime := fmt.Sprintf("%02d:%02d:%02d\n", hour, minute, second)
 			conn.Write([]byte(totalRuntime))
+		} else if typeStr == "5" {
+			conn.Write(nil)
 		}
 		reqNum++
 	}

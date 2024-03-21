@@ -21,9 +21,8 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
-		for sig := range c {
-			log.Printf("captured %v\n", sig)
-			fmt.Print("Bye bye~\n")
+		for range c {
+			fmt.Print("\nBye bye~\n")
 			os.Exit(1)
 		}
 	}()
@@ -61,7 +60,11 @@ func main() {
 			conn.Write([]byte(input))
 		}
 		buffer := make([]byte, 1024)
-		conn.Read(buffer)
+		read, err := conn.Read(buffer)
+		if err != nil || read == 0 {
+			log.Fatalf("Failed to connect to server: %v", err)
+			return
+		}
 		duration := time.Since(start)
 		if strings.TrimRight(input_option, "\n") == "1" {
 			fmt.Printf("\nReply from server: %s", string(buffer))
@@ -74,6 +77,7 @@ func main() {
 			fmt.Printf("\nReply from server: run time = %s", string(buffer))
 		} else if strings.TrimRight(input_option, "\n") == "5" {
 			fmt.Print("Bye bye~\n")
+			return
 		}
 		fmt.Printf("RTT = %s\n", duration)
 	}
