@@ -31,7 +31,11 @@ func main() {
 	serverName := "nsl5.cau.ac.kr"
 	serverPort := "20532"
 
-	conn, _ := net.Dial("tcp", serverName+":"+serverPort)
+	conn, err := net.Dial("tcp", serverName+":"+serverPort)
+	if err != nil {
+		log.Fatalf("Failed to connect to server: %v", err)
+		return
+	}
 
 	localAddr := conn.LocalAddr().(*net.TCPAddr)
 	fmt.Printf("Client is running on port %d\n", localAddr.Port)
@@ -46,7 +50,7 @@ func main() {
 		fmt.Printf("5) exit\n")
 		fmt.Printf("Input option: ")
 		input_option, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-		fmt.Printf("%s\n", input_option)
+
 		start := time.Now()
 		conn.Write([]byte(input_option))
 
