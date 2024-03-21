@@ -1,5 +1,5 @@
 # source directory
-SRC_DIR := ../
+SRC_DIR := java_example
 
 # output directory
 OUT_DIR := out

@@ -8,7 +8,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Date;
 
-public class TimeServer {
+public class JavaTCPServer {
     public static void main(String[] args) {
         int port = 20532;
         try (ServerSocket serverSocket = new ServerSocket(port)) {
