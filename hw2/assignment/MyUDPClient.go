@@ -57,9 +57,8 @@ func main() {
 		//write to server
 		start := time.Now()
 		server_addr, _ := net.ResolveUDPAddr("udp", serverName+":"+serverPort)
-		fmt.Print(server_addr)
 		pconn.WriteTo([]byte(inputOption), server_addr) // to server - 1
-
+		fmt.Print("hello")
 		if strings.TrimRight(inputOption, "\n") == "1" {
 			fmt.Printf("Input lowercase sentence: ")
 			input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
@@ -67,6 +66,8 @@ func main() {
 			s_addr, _ := net.ResolveUDPAddr("udp", serverName+":"+serverPort)
 			pconn.WriteTo([]byte(input), s_addr) // to server - 2
 		}
+		fmt.Print("bye")
+		pconn.SetReadDeadline(time.Now().Add(5 * time.Second))
 		// read from server
 		buffer := make([]byte, 1024)
 		read, _, err := pconn.ReadFrom(buffer) //from server - 3
