@@ -1,3 +1,4 @@
+import java.util.Scanner;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -6,12 +7,15 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+// https://woolbro.tistory.com/28
 public class EasyTCPClient {
     public static void main(String[] args) {
         String hostname = "nsl2.cau.ac.kr";
         int port = 20532;
-        for (int i = 0; i < 10; i++) {
+        while (true) {
             try (Socket socket = new Socket(hostname, port)) {
+                Scanner sc = new Scanner(System.in);
+                String input = sc.nextLine();
                 OutputStream out = socket.getOutputStream();
                 String realStr = "This is woolbro dev Test";
                 out.write(realStr.getBytes());
