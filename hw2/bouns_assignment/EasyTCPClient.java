@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
-public class MyTCPClient {
+public class EasyTCPClient {
 
     public static void main(String[] args) {
         final String serverName = "nsl2.cau.ac.kr";

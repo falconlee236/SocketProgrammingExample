@@ -6,7 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class MyTCPServer {
+public class EasyTCPServer {
 
     private static final AtomicInteger reqNum = new AtomicInteger(0);
     private static final long startTime = System.currentTimeMillis();
@@ -43,8 +43,8 @@ public class MyTCPServer {
             try (BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                  PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true)) {
 
-                byte[] typeBuffer = new byte[1024];
-                byte[] buffer = new byte[1024];
+                char[] typeBuffer = new char[1024];
+                char[] buffer = new char[1024];
 
                 while (true) {
                     int t = in.read(typeBuffer);
