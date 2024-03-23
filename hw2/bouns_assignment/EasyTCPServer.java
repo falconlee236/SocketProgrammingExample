@@ -6,19 +6,18 @@ public class EasyTCPServer {
     public static void main(String[] args) {
         final int PORT = 30532;
 
+        System.out.printf("The server is ready to receive on port %d\n", PORT);
         try {
             ServerSocket serverSocket = new ServerSocket(PORT);
-            System.out.println("Server started. Waiting for clients...");
-
             Socket clientSocket = serverSocket.accept();
-            System.out.println("Client connected: " + clientSocket);
 
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 
             String inputLine;
             while ((inputLine = in.readLine()) != null) {
-                System.out.println("Received from client: " + inputLine);
+                System.out.println("Client connected: " + clientSocket);
+                System.out.println("Command " + inputLine);
                 out.println("Server received: " + inputLine);
             }
 
