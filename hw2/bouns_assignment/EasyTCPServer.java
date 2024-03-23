@@ -1,9 +1,16 @@
-import java.io.*;
-import java.net.*;
+/*
+EasyTCPServer.java
+20190532 Sangyun Lee
+*/
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 
 public class EasyTCPServer {
     public static void main(String[] args) {
@@ -11,6 +18,9 @@ public class EasyTCPServer {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
         final int PORT = 30532;
 
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("\nBye bye~");
+        }));
         try {
             while (true){
                 System.out.printf("The server is ready to receive on port %d\n", PORT);
@@ -43,7 +53,7 @@ public class EasyTCPServer {
                 clientSocket.close();
                 serverSocket.close();
             }
-        } catch (IOException  e) {
+        } catch (IOException e) {
 //            e.printStackTrace();
         }
     }

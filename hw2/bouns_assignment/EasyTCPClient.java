@@ -1,11 +1,22 @@
-import java.io.*;
-import java.net.*;
-import java.util.*;
+/*
+EasyTCPClient.java
+20190532 Sangyun Lee
+*/
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.Scanner;
 
 public class EasyTCPClient {
     public static void main(String[] args) {
         final String SERVER_ADDRESS = "localhost";
         final int PORT = 30532;
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("\nBye bye~");
+        }));
 
         try (
                 Socket socket = new Socket(SERVER_ADDRESS, PORT);
