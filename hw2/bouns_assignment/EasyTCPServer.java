@@ -18,6 +18,11 @@ public class EasyTCPServer {
             while ((inputLine = in.readLine()) != null) {
                 System.out.println("Client connected: " + clientSocket);
                 System.out.println("Command " + inputLine);
+                String result = "";
+                if (inputLine.equals("1")){
+                    result = in.readLine();
+                }
+                System.out.println("Server received result " + result);
                 out.println("Server received: " + inputLine);
             }
 

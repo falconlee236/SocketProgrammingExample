@@ -24,12 +24,15 @@ public class EasyTCPClient {
                 System.out.println("3) get server request count");
                 System.out.println("4) get server running time");
                 System.out.println("5) exit");
-                System.out.println("Input option: ");
+                System.out.print("Input option: ");
                 String strType = sc.nextLine().replaceFirst("\n", "");;
+                out.println(strType);
 
-                String message = "Message " + strType;
-                out.println(message);
-                System.out.println("Sent to server: " + message);
+                if (strType.equals("1")){
+                    System.out.print("Input sentence: ");
+                    String text = sc.nextLine().replaceFirst("\n", "");
+                    out.println(text.toUpperCase());
+                }
                 String response = in.readLine();
                 System.out.println("Server response: " + response);
                 Thread.sleep(1000); // Optional delay
