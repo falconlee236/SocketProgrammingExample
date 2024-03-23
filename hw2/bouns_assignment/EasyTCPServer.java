@@ -1,9 +1,14 @@
 import java.io.*;
 import java.net.*;
-import java.util.*;
+import java.time.Duration;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 
 public class EasyTCPServer {
     public static void main(String[] args) {
+        LocalTime serverStartTime = LocalTime.now();
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
         final int PORT = 30532;
 
         System.out.printf("The server is ready to receive on port %d\n", PORT);
@@ -26,6 +31,10 @@ public class EasyTCPServer {
                             clientSocket.getInetAddress(), clientSocket.getPort());
                 } else if (inputLine.equals("3")){
                     result = String.format("requests served = %d", reqNum);
+                } else if (inputLine.equals("4")){
+                    LocalTime currentServerTime = LocalTime.now();
+                    Duration duration = Duration.between(serverStartTime, currentServerTime);
+                    result = String.format("run time = %s", formatDuration(duration));
                 }
                 out.println(result);
                 reqNum++;
@@ -37,5 +46,13 @@ public class EasyTCPServer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static String formatDuration(Duration duration) {
+        long hours = duration.toHours();
+        long minutes = duration.toMinutes() % 60;
+        long seconds = duration.getSeconds() % 60;
+
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 }
