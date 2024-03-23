@@ -9,7 +9,7 @@ import java.net.UnknownHostException;
 public class EasyTCPClient {
 
     public static void main(String[] args) {
-        String hostname = "nsl2.cau.ac.kr";
+        String hostname = "127.0.0.1";
         int port = 20532;
         while (true) {
             try (Socket socket = new Socket(hostname, port)) {
