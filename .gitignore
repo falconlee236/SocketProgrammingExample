@@ -22,6 +22,7 @@ go.work
 
 # jetbrain
 .idea
+nsl2024-1.iml
 
 #java file
 *.class
