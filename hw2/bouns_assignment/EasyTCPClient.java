@@ -34,7 +34,7 @@ public class EasyTCPClient {
                     String text = sc.nextLine().replaceFirst("\n", "");
                     startTime = System.nanoTime();
                     out.println(text.toUpperCase());
-                }
+                } 
                 String response = in.readLine();
                 long endTime = System.nanoTime();
                 System.out.println("Reply from server: " + response);

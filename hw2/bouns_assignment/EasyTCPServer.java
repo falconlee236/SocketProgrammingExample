@@ -21,9 +21,11 @@ public class EasyTCPServer {
                 String result = "";
                 if (inputLine.equals("1")){
                     result = in.readLine();
+                } else if (inputLine.equals("2")){
+                    result = String.format("client IP = %s, port = %d",
+                            clientSocket.getInetAddress(), clientSocket.getPort());
                 }
-                System.out.println("Server received result " + result);
-                out.println("Server received: " + inputLine);
+                out.println(result);
             }
 
             System.out.println("Client disconnected: " + clientSocket);
