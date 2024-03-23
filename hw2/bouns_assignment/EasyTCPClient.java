@@ -56,7 +56,6 @@ public class EasyTCPClient {
                 Thread.sleep(1000); // Optional delay
             }
         } catch (IOException | InterruptedException e) {
-            System.out.println(e.getClass().getName());
             if (e.getClass().getName().equals("java.net.SocketException")){
                 System.out.println("Server Disconnected");
             }
