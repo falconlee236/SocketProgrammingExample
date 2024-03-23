@@ -15,8 +15,8 @@ public class EasyTCPServer {
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 
             String inputLine;
+            int reqNum = 0;
             while ((inputLine = in.readLine()) != null) {
-                System.out.println("Client connected: " + clientSocket);
                 System.out.println("Command " + inputLine);
                 String result = "";
                 if (inputLine.equals("1")){
@@ -24,8 +24,11 @@ public class EasyTCPServer {
                 } else if (inputLine.equals("2")){
                     result = String.format("client IP = %s, port = %d",
                             clientSocket.getInetAddress(), clientSocket.getPort());
+                } else if (inputLine.equals("3")){
+                    result = String.format("requests served = %d", reqNum);
                 }
                 out.println(result);
+                reqNum++;
             }
 
             System.out.println("Client disconnected: " + clientSocket);
