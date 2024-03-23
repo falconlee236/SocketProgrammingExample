@@ -4,7 +4,7 @@ import java.util.*;
 
 public class EasyTCPServer {
     public static void main(String[] args) {
-        final int PORT = 9999;
+        final int PORT = 30532;
 
         try {
             ServerSocket serverSocket = new ServerSocket(PORT);
