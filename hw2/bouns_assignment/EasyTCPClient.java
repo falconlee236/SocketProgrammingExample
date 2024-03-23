@@ -26,15 +26,19 @@ public class EasyTCPClient {
                 System.out.println("5) exit");
                 System.out.print("Input option: ");
                 String strType = sc.nextLine().replaceFirst("\n", "");;
+                long startTime = System.nanoTime();
                 out.println(strType);
 
                 if (strType.equals("1")){
                     System.out.print("Input sentence: ");
                     String text = sc.nextLine().replaceFirst("\n", "");
+                    startTime = System.nanoTime();
                     out.println(text.toUpperCase());
                 }
                 String response = in.readLine();
-                System.out.println("Server response: " + response);
+                long endTime = System.nanoTime();
+                System.out.println("Reply from server: " + response);
+                System.out.printf("RTT = %fms\n", (endTime - startTime) / 1e+6);
                 Thread.sleep(1000); // Optional delay
             }
         } catch (IOException | InterruptedException e) {
