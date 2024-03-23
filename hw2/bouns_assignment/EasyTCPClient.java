@@ -34,7 +34,10 @@ public class EasyTCPClient {
                     String text = sc.nextLine().replaceFirst("\n", "");
                     startTime = System.nanoTime();
                     out.println(text.toUpperCase());
-                } 
+                } else if (strType.equals("5")){
+                    System.out.println("Bye bye~");
+                    throw new InterruptedException();
+                }
                 String response = in.readLine();
                 long endTime = System.nanoTime();
                 System.out.println("Reply from server: " + response);
@@ -42,7 +45,10 @@ public class EasyTCPClient {
                 Thread.sleep(1000); // Optional delay
             }
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            System.out.println(e.getClass().getName());
+            if (e.getClass().getName().equals("java.net.SocketException")){
+                System.out.println("Server Disconnected");
+            }
         }
     }
 }
