@@ -1,32 +1,30 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.io.*;
+import java.net.*;
+import java.util.*;
 
 public class EasyTCPClient {
 
     public static void main(String[] args) {
-        String hostname = "127.0.0.1";
-        int port = 20532;
-        while (true) {
-            try (Socket socket = new Socket(hostname, port)) {
-                OutputStream out = socket.getOutputStream();
-                String realStr = "This is woolbro dev Test";
-                out.write(realStr.getBytes());
-                InputStream input = socket.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+        final String SERVER_ADDRESS = "localhost";
+        final int PORT = 9999;
 
-                String time = reader.readLine();
-
-                System.out.println(time);
-            } catch (UnknownHostException ex) {
-                System.out.println("Server not found: " + ex.getMessage());
-            } catch (IOException ex) {
-                System.out.println("I/O error: " + ex.getMessage());
+        try (
+                Socket socket = new Socket(SERVER_ADDRESS, PORT);
+                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))
+        ) {
+            Scanner sc = new Scanner(System.in);
+            while (true) {
+                String strType = sc.nextLine().replaceFirst("\n", "");;
+                String message = "Message " + strType;
+                out.println(message);
+                System.out.println("Sent to server: " + message);
+                String response = in.readLine();
+                System.out.println("Server response: " + response);
+                Thread.sleep(1000); // Optional delay
             }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }

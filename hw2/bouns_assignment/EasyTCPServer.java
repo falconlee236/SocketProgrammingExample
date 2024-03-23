@@ -1,33 +1,32 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.Date;
+import java.io.*;
+import java.net.*;
+import java.util.*;
 
 public class EasyTCPServer {
     public static void main(String[] args) {
-        int port = 20532;
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Server is listening on port " + port);
-            while (true) {
-                Socket socket = serverSocket.accept();
+        final int PORT = 9999;
 
-                System.out.println("[ "+socket.getInetAddress()+" ] client connected");
-                OutputStream output = socket.getOutputStream();
-                PrintWriter writer = new PrintWriter(output, true);
-                writer.println(new Date().toString());
+        try {
+            ServerSocket serverSocket = new ServerSocket(PORT);
+            System.out.println("Server started. Waiting for clients...");
 
-                InputStream input = socket.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-                System.out.println("###### msg : "+reader.readLine());
+            Socket clientSocket = serverSocket.accept();
+            System.out.println("Client connected: " + clientSocket);
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                System.out.println("Received from client: " + inputLine);
+                out.println("Server received: " + inputLine);
             }
-        } catch (IOException ex) {
-            System.out.println("Server exception: " + ex.getMessage());
-            ex.printStackTrace();
+
+            System.out.println("Client disconnected: " + clientSocket);
+            clientSocket.close();
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
