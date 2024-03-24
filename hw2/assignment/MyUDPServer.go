@@ -40,7 +40,7 @@ func main() {
 			return
 		}
 		fmt.Printf("Connection request from %s\n", r_addr.String())
-		typeStr := string(typeBuffer[:count-1])
+		typeStr := strings.TrimRight(string(typeBuffer[:count]), "\n")
 		fmt.Printf("Command %s\n", typeStr)
 
 		var result string = ""
