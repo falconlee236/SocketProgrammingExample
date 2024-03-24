@@ -1,4 +1,4 @@
-SRC_DIR := bouns_assignment
+SRC_DIR := .
 OUT_DIR := .
 SRCS := $(wildcard $(SRC_DIR)/*.java)
 
@@ -6,7 +6,6 @@ CLS := $(SRCS:$(SRC_DIR)/%.java=$(OUT_DIR)/%.class)
 
 # compiler and compiler flags
 JC := javac
-JCFLAGS := -d $(OUT_DIR)/ -cp $(SRC_DIR)/
 # suffixes
 .SUFFIXES: .java
 
