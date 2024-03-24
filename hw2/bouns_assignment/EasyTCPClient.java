@@ -12,7 +12,7 @@ import java.util.Scanner;
 public class EasyTCPClient {
     public static void main(String[] args) {
         final String SERVER_ADDRESS = "localhost";
-        final int PORT = 30532;
+        final int PORT = 20532;
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("\nBye bye~");

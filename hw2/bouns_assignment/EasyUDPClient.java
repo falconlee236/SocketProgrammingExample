@@ -11,7 +11,7 @@ import java.util.Scanner;
 public class EasyUDPClient {
     public static void main(String[] args) {
         final String SERVER_ADDRESS = "127.0.0.1";
-        final int PORT = 20532;
+        final int PORT = 30532;
         final int TIMEOUT =5000;
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> System.out.println("\nBye bye~")));

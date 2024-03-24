@@ -16,7 +16,7 @@ public class EasyTCPServer {
     public static void main(String[] args) {
         LocalTime serverStartTime = LocalTime.now();
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
-        final int PORT = 30532;
+        final int PORT = 20532;
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("\nBye bye~");
