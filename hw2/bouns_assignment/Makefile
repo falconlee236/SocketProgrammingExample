@@ -13,7 +13,7 @@ JC := javac
 all: $(CLS)
 
 $(CLS): $(OUT_DIR)/%.class: $(SRC_DIR)/%.java
-	$(JC) $(JCFLAGS) $<
+	$(JC) $<
 
 ##
 # clean up any output files
