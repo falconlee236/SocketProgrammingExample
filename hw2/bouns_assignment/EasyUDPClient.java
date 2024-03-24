@@ -3,22 +3,21 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.Socket;
+import java.net.*;
 import java.util.Scanner;
 
 public class EasyUDPClient {
     public static void main(String[] args) {
         final String SERVER_ADDRESS = "127.0.0.1";
         final int PORT = 30532;
+        final int TIMEOUT =5000;
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("\nBye bye~");
         }));
 
         try (DatagramSocket clientSocket = new DatagramSocket()) {
+            clientSocket.setSoTimeout(TIMEOUT);
             InetAddress serverAddress = InetAddress.getByName(SERVER_ADDRESS);
             Scanner sc = new Scanner(System.in);
             System.out.printf("The client is running on port %d\n", clientSocket.getLocalPort());
@@ -64,9 +63,8 @@ public class EasyUDPClient {
                 System.out.printf("RTT = %fms\n", (endTime - startTime) / 1e+6);
                 Thread.sleep(1000); // Optional delay
             }
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            if (e.getClass().getName().equals("java.net.SocketException")){
+        } catch (IOException | InterruptedException  e) {
+            if (e.getClass().getName().equals("java.net.SocketTimeoutException")){
                 System.out.println("Server Disconnected");
             }
         }
