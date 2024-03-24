@@ -1,6 +1,6 @@
 /*
 * EasyUDPServer.java
-* 20190532 이상윤
+* 20190532 Sangyun Lee
 * */
 import java.io.IOException;
 import java.net.DatagramPacket;

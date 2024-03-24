@@ -1,3 +1,7 @@
+/*
+ EasyUDPClient.java
+ 20190532 Sangyun Lee
+ */
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
