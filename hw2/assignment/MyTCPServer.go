@@ -11,7 +11,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"strconv"
+	"strings"
 	"time"
 )
 
@@ -49,9 +49,9 @@ func TCPClientHandler(conn net.Conn, reqNum int, start time.Time) {
 	defer conn.Close()
 
 	typeBuffer := make([]byte, 1024)
-	buffer := make([]byte, 1024)
 
 	for {
+		buffer := make([]byte, 1024)
 		t, _ := conn.Read(typeBuffer)
 		if t == 0 {
 			return
@@ -59,23 +59,23 @@ func TCPClientHandler(conn net.Conn, reqNum int, start time.Time) {
 		typeStr := string(typeBuffer[:t-1])
 		fmt.Printf("Command %s\n", typeStr)
 
+		var result string = ""
 		if typeStr == "1" {
 			count, _ := conn.Read(buffer)
-			conn.Write(bytes.ToUpper(buffer[:count]))
+			result = string(bytes.ToUpper(buffer[:count]))
 		} else if typeStr == "2" {
-			conn.Write([]byte(conn.RemoteAddr().String()))
+			addrs := strings.Split(conn.RemoteAddr().String(), ":")
+			result = fmt.Sprintf("client IP = %s, port = %s\n", addrs[0], addrs[1])
 		} else if typeStr == "3" {
-			conn.Write([]byte(strconv.Itoa(reqNum)))
+			result = fmt.Sprintf("request served = %d\n", reqNum)
 		} else if typeStr == "4" {
 			duration := time.Since(start)
 			hour := int(duration.Seconds() / 3600)
 			minute := int(duration.Seconds()/60) % 60
 			second := int(duration.Seconds()) % 60
-			totalRuntime := fmt.Sprintf("%02d:%02d:%02d\n", hour, minute, second)
-			conn.Write([]byte(totalRuntime))
-		} else if typeStr == "5" {
-			conn.Write([]byte("-1"))
+			result = fmt.Sprintf("run time = %02d:%02d:%02d\n", hour, minute, second)
 		}
+		conn.Write([]byte(result))
 		reqNum++
 	}
 }

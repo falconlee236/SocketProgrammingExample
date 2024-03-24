@@ -28,8 +28,8 @@ func main() {
 		}
 	}()
 
-	serverName := "nsl2.cau.ac.kr"
-	serverPort := "20532"
+	serverName := "localhost"
+	serverPort := "30532"
 
 	conn, err := net.Dial("tcp", serverName+":"+serverPort)
 	if err != nil {
@@ -63,27 +63,18 @@ func main() {
 			input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 			start = time.Now()
 			conn.Write([]byte(input))
+		} else if strings.TrimRight(inputOption, "\n") == "5" {
+			fmt.Printf("Bye bye~")
+			return
 		}
 		buffer := make([]byte, 1024)
 		read, err := conn.Read(buffer)
+		duration := time.Since(start)
 		if err != nil || read == 0 {
 			log.Fatalf("Failed to connect to server: %v", err)
 			return
 		}
-		duration := time.Since(start)
-		if strings.TrimRight(inputOption, "\n") == "1" {
-			fmt.Printf("\nReply from server: %s", string(buffer))
-		} else if strings.TrimRight(inputOption, "\n") == "2" {
-			recInfo := strings.Split(string(buffer), ":")
-			fmt.Printf("\nReply from server: client IP = %s PORT = %s\n", recInfo[0], recInfo[1])
-		} else if strings.TrimRight(inputOption, "\n") == "3" {
-			fmt.Printf("\nReply from server: requests served = %s\n", string(buffer))
-		} else if strings.TrimRight(inputOption, "\n") == "4" {
-			fmt.Printf("\nReply from server: run time = %s", string(buffer))
-		} else if strings.TrimRight(inputOption, "\n") == "5" {
-			fmt.Print("Bye bye~\n")
-			return
-		}
+		fmt.Printf("\nReply from server: %s", string(buffer))
 		fmt.Printf("RTT = %dms\n", duration.Milliseconds())
 	}
 }
