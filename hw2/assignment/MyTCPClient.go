@@ -75,6 +75,6 @@ func main() {
 			return
 		}
 		fmt.Printf("\nReply from server: %s", string(buffer))
-		fmt.Printf("RTT = %dms\n", duration.Milliseconds())
+		fmt.Printf("RTT = %fms\n", float64(duration.Nanoseconds())/1e+6)
 	}
 }
