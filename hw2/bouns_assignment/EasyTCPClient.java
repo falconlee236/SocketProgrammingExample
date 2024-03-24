@@ -44,7 +44,7 @@ public class EasyTCPClient {
                     System.out.print("Input sentence: ");
                     String text = sc.nextLine().replaceFirst("\n", "");
                     startTime = System.nanoTime();
-                    out.println(text.toUpperCase());
+                    out.println(text);
                 } else if (strType.equals("5")){
                     System.out.println("Bye bye~");
                     throw new InterruptedException();

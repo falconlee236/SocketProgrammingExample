@@ -37,6 +37,7 @@ public class EasyTCPServer {
                     String result = "";
                     if (inputLine.equals("1")){
                         result = in.readLine();
+                        result = result.toUpperCase();
                     } else if (inputLine.equals("2")){
                         result = String.format("client IP = %s, port = %d",
                                 clientSocket.getInetAddress(), clientSocket.getPort());
