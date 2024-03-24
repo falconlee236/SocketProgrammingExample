@@ -35,7 +35,7 @@ public class EasyUDPClient {
                 byte [] strTypeBytes = strType.getBytes();
 
                 DatagramPacket sendStrTypePacket =
-                        new DatagramPacket(strTypeBytes, strTypeBytes.length, serverAddress, 30532);
+                        new DatagramPacket(strTypeBytes, strTypeBytes.length, serverAddress, PORT);
                 clientSocket.send(sendStrTypePacket);
 
                 if (strType.equals("1")){
