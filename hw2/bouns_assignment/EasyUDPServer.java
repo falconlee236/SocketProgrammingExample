@@ -1,21 +1,21 @@
-import java.io.BufferedReader;
+/*
+* EasyUDPServer.java
+* 20190532 이상윤
+* */
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.time.Duration;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 
 public class EasyUDPServer {
     public static void main(String[] args) {
         LocalTime serverStartTime = LocalTime.now();
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
         final int PORT = 30532;
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("\nBye bye~");
-        }));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> System.out.println("\nBye bye~")));
+
         try (DatagramSocket serverSocket = new DatagramSocket(PORT)){
             int reqNum = 0;
             while (true){
