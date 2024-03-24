@@ -17,6 +17,7 @@ public class EasyUDPServer {
             System.out.println("\nBye bye~");
         }));
         try (DatagramSocket serverSocket = new DatagramSocket(PORT)){
+            int reqNum = 0;
             while (true){
                 System.out.printf("The server is ready to receive on port %d\n", PORT);
 
@@ -24,8 +25,7 @@ public class EasyUDPServer {
                 DatagramPacket receiveInputLinePacket = new DatagramPacket(inputLineBytes, inputLineBytes.length);
                 serverSocket.receive(receiveInputLinePacket);
 
-                String inputLine = new String(receiveInputLinePacket.getData());
-                int reqNum = 0;
+                String inputLine = new String(receiveInputLinePacket.getData()).trim();
                 System.out.println("Command " + inputLine);
 
                 String result = "";
@@ -34,7 +34,7 @@ public class EasyUDPServer {
                     DatagramPacket receiveTextBytesPacket = new DatagramPacket(textBytes, textBytes.length);
                     serverSocket.receive(receiveTextBytesPacket);
 
-                    result = new String(receiveTextBytesPacket.getData()).toUpperCase();
+                    result = new String(receiveTextBytesPacket.getData()).trim().toUpperCase();
                 } else if (inputLine.equals("2")){
                     result = String.format("client IP = %s, port = %d",
                             receiveInputLinePacket.getAddress().getHostAddress(),
@@ -47,7 +47,7 @@ public class EasyUDPServer {
                     result = String.format("run time = %s", formatDuration(duration));
                 }
 
-                byte[] resultBytes = new byte[4096];
+                byte[] resultBytes = result.getBytes();
                 InetAddress clientAddress = receiveInputLinePacket.getAddress();
                 int clientPort = receiveInputLinePacket.getPort();
                 DatagramPacket sendResultPacket =
