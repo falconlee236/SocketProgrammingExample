@@ -31,6 +31,15 @@ public class EasyUDPClient {
                 System.out.println("5) exit");
                 System.out.print("Input option: ");
                 String strType = sc.nextLine().replaceFirst("\n", "");
+                try{
+                    if (Integer.parseInt(strType) < 1 || Integer.parseInt(strType) > 5){
+                        System.out.println("invalid argument");
+                        continue;
+                    }
+                } catch (NumberFormatException e){
+                    System.out.println("invalid argument");
+                    continue;
+                }
                 long startTime = System.nanoTime();
                 byte [] strTypeBytes = strType.getBytes();
 
