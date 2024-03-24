@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -42,23 +43,23 @@ func main() {
 		typeStr := string(typeBuffer[:count-1])
 		fmt.Printf("Command %s\n", typeStr)
 
+		var result string = ""
 		if typeStr == "1" {
-			t, in_addr, _ := pconn.ReadFrom(buffer)           // from client - 2
-			pconn.WriteTo(bytes.ToUpper(buffer[:t]), in_addr) // to client - 3
+			t, _, _ := pconn.ReadFrom(buffer)
+			result = string(bytes.ToUpper(buffer[:t]))
 		} else if typeStr == "2" {
-			pconn.WriteTo([]byte(r_addr.String()), r_addr) // to client - 3
+			addrs := strings.Split(r_addr.String(), ":")
+			result = fmt.Sprintf("client IP = %s, port = %s\n", addrs[0], addrs[1])
 		} else if typeStr == "3" {
-			pconn.WriteTo([]byte(strconv.Itoa(reqNum)), r_addr) // to client - 3
+			result = fmt.Sprintf("request served = %d\n", reqNum)
 		} else if typeStr == "4" {
 			duration := time.Since(start)
 			hour := int(duration.Seconds() / 3600)
 			minute := int(duration.Seconds()/60) % 60
 			second := int(duration.Seconds()) % 60
-			totalRuntime := fmt.Sprintf("%02d:%02d:%02d\n", hour, minute, second)
-			pconn.WriteTo([]byte(totalRuntime), r_addr) // to client - 3
-		} else if typeStr == "5" {
-			pconn.WriteTo([]byte("-1"), r_addr) // to client - 3
+			result = fmt.Sprintf("run time = %02d:%02d:%02d\n", hour, minute, second)
 		}
+		pconn.WriteTo([]byte(result), r_addr)
 		reqNum++
 	}
 	//go UDPClientHandler(reqNum, start)

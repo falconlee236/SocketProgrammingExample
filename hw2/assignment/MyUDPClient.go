@@ -28,7 +28,7 @@ func main() {
 		}
 	}()
 
-	serverName := "nsl2.cau.ac.kr"
+	serverName := "localhost"
 	serverPort := "20532"
 
 	pconn, err := net.ListenPacket("udp", ":")
@@ -64,6 +64,9 @@ func main() {
 			start = time.Now()
 			s_addr, _ := net.ResolveUDPAddr("udp", serverName+":"+serverPort)
 			pconn.WriteTo([]byte(input), s_addr) // to server - 2
+		} else if strings.TrimRight(inputOption, "\n") == "5" {
+			fmt.Println("Bye bye~")
+			return
 		}
 
 		// read from server
@@ -76,19 +79,7 @@ func main() {
 			return
 		}
 		duration := time.Since(start)
-		if strings.TrimRight(inputOption, "\n") == "1" {
-			fmt.Printf("\nReply from server: %s", string(buffer))
-		} else if strings.TrimRight(inputOption, "\n") == "2" {
-			recInfo := strings.Split(string(buffer), ":")
-			fmt.Printf("\nReply from server: client IP = %s PORT = %s\n", recInfo[0], recInfo[1])
-		} else if strings.TrimRight(inputOption, "\n") == "3" {
-			fmt.Printf("\nReply from server: requests served = %s\n", string(buffer))
-		} else if strings.TrimRight(inputOption, "\n") == "4" {
-			fmt.Printf("\nReply from server: run time = %s", string(buffer))
-		} else if strings.TrimRight(inputOption, "\n") == "5" {
-			fmt.Print("Bye bye~\n")
-			return
-		}
+		fmt.Printf("Reply from server: %s\n", string(buffer))
 		fmt.Printf("RTT = %dms\n", duration.Milliseconds())
 	}
 }
