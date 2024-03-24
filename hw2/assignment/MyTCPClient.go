@@ -29,7 +29,7 @@ func main() {
 	}()
 
 	serverName := "localhost"
-	serverPort := "30532"
+	serverPort := "20532"
 
 	conn, err := net.Dial("tcp", serverName+":"+serverPort)
 	if err != nil {

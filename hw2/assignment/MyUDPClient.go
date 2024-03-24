@@ -29,7 +29,7 @@ func main() {
 	}()
 
 	serverName := "localhost"
-	serverPort := "20532"
+	serverPort := "30532"
 
 	pconn, err := net.ListenPacket("udp", ":")
 	if err != nil {

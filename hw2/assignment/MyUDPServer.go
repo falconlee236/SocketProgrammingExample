@@ -28,7 +28,7 @@ func main() {
 
 	start := time.Now()
 	reqNum := 0
-	serverPort := "20532"
+	serverPort := "30532"
 	pconn, _ := net.ListenPacket("udp", ":"+serverPort)
 	fmt.Printf("Server is ready to receive on port %s\n", serverPort)
 	for {
