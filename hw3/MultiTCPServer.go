@@ -1,5 +1,5 @@
 /**
- * MyTCPServer.go
+ * MultiTCPServer.go
 20190532 sangyunLee
  **/
 
@@ -11,6 +11,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -28,6 +29,7 @@ func main() {
 	start := time.Now()
 	reqNum := 0
 	serverPort := "20532"
+	clientList := make([]int, 2)
 
 	listener, _ := net.Listen("tcp", ":"+serverPort)
 	fmt.Printf("Server is ready to receive on port %s\n", serverPort)
@@ -41,12 +43,31 @@ func main() {
 			break
 		}
 
-		go TCPClientHandler(conn, reqNum, start)
+		nextClientIdx := findNextClientIdx(clientList)
+		if len(clientList) <= nextClientIdx {
+			clientList = append(clientList, nextClientIdx+1)
+		} else {
+			clientList[nextClientIdx] = nextClientIdx + 1
+		}
+		clientName := fmt.Sprintf("client %s", strconv.Itoa(nextClientIdx+1))
+
+		go TCPClientHandler(conn, reqNum, start, clientName)
 	}
 }
 
-func TCPClientHandler(conn net.Conn, reqNum int, start time.Time) {
+func findNextClientIdx(clientList []int) int {
+	i := 0
+	for i = 0; i < len(clientList); i++ {
+		if clientList[i] == 0 {
+			return i
+		}
+	}
+	return i
+}
+
+func TCPClientHandler(conn net.Conn, reqNum int, start time.Time, clientName string) {
 	defer conn.Close()
+	fmt.Println(clientName)
 
 	typeBuffer := make([]byte, 1024)
 
