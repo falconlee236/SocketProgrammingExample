@@ -16,6 +16,16 @@ import (
 )
 
 func main() {
+	totalClientNum := 0
+	go func(totalClientNum *int) {
+		for {
+			time.Sleep(10 * time.Second)
+			currentTimeStr := time.Now().Format("15:04:05")
+			fmt.Printf("[Time: %s] Number of clients connected = %d\n",
+				currentTimeStr, *totalClientNum)
+		}
+	}(&totalClientNum)
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -26,7 +36,6 @@ func main() {
 	}()
 
 	start := time.Now()
-	totalClientNum := 0
 	serverPort := "20532"
 	clientList := make([]int, 2)
 
