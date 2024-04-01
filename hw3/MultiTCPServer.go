@@ -11,7 +11,6 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -27,7 +26,7 @@ func main() {
 	}()
 
 	start := time.Now()
-	reqNum := 0
+	totalClientNum := 0
 	serverPort := "20532"
 	clientList := make([]int, 2)
 
@@ -49,8 +48,9 @@ func main() {
 		} else {
 			clientList[nextClientIdx] = nextClientIdx + 1
 		}
+		totalClientNum++
 
-		go TCPClientHandler(conn, reqNum, start, nextClientIdx+1, &clientList)
+		go TCPClientHandler(conn, start, &totalClientNum, nextClientIdx+1, &clientList)
 	}
 }
 
@@ -64,17 +64,23 @@ func findNextClientIdx(clientList []int) int {
 	return i
 }
 
-func TCPClientHandler(conn net.Conn, reqNum int, start time.Time, clientNum int, clientList *[]int) {
+func TCPClientHandler(conn net.Conn, start time.Time,
+	totalClientNum *int, clientNum int, clientList *[]int) {
 	defer conn.Close() //multiple defer function Last in First out
-	defer func(clientNum int, clientList *[]int) {
+	defer func(totalClientNum *int, clientNum int, clientList *[]int) {
 		(*clientList)[clientNum-1] = 0
-		fmt.Printf("Remove client %d\n", clientNum)
-	}(clientNum, clientList)
+		*totalClientNum -= 1
+		currentTimeStr := time.Now().Format("15:04:05")
+		fmt.Printf("[Time: %s] Client %d disconnected."+" Number of clients connected = %d\n",
+			currentTimeStr, clientNum, *totalClientNum)
+	}(totalClientNum, clientNum, clientList)
 
-	clientName := fmt.Sprintf("client %s\n", strconv.Itoa(clientNum))
-	fmt.Println(clientName)
+	currentTimeStr := time.Now().Format("15:04:05")
+	fmt.Printf("[Time: %s] Client %d connected."+" Number of clients connected = %d\n",
+		currentTimeStr, clientNum, *totalClientNum)
 
 	typeBuffer := make([]byte, 1024)
+	reqNum := 0
 
 	for {
 		buffer := make([]byte, 1024)
