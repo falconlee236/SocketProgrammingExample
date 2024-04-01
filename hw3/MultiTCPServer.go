@@ -49,9 +49,8 @@ func main() {
 		} else {
 			clientList[nextClientIdx] = nextClientIdx + 1
 		}
-		clientName := fmt.Sprintf("client %s", strconv.Itoa(nextClientIdx+1))
 
-		go TCPClientHandler(conn, reqNum, start, clientName)
+		go TCPClientHandler(conn, reqNum, start, nextClientIdx+1, &clientList)
 	}
 }
 
@@ -65,8 +64,14 @@ func findNextClientIdx(clientList []int) int {
 	return i
 }
 
-func TCPClientHandler(conn net.Conn, reqNum int, start time.Time, clientName string) {
-	defer conn.Close()
+func TCPClientHandler(conn net.Conn, reqNum int, start time.Time, clientNum int, clientList *[]int) {
+	defer conn.Close() //multiple defer function Last in First out
+	defer func(clientNum int, clientList *[]int) {
+		(*clientList)[clientNum-1] = 0
+		fmt.Printf("Remove client %d\n", clientNum)
+	}(clientNum, clientList)
+
+	clientName := fmt.Sprintf("client %s\n", strconv.Itoa(clientNum))
 	fmt.Println(clientName)
 
 	typeBuffer := make([]byte, 1024)
