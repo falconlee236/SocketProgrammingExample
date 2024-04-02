@@ -15,15 +15,16 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h> // inet_ntoa
 
 
 #define BUFSIZE 100
 #define PORT 20532
+#define MAX_CLIENT 100
 
 int main(void){
-    int serv_sock;
+    int serv_sock = socket(AF_INET, SOCK_STREAM, 0);
     // 서버 소캣 생성, AF_INET이 TCP를 가리킴
-    serv_sock = socket(AF_INET, SOCK_STREAM, 0);
     // 소캣 옵션 생성
     int opt = 1; // 단순 옵션 정보를 저장하는 변수
     setsockopt(serv_sock, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt));
@@ -32,7 +33,7 @@ int main(void){
     struct sockaddr_in serv_addr;
     bzero(&serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET; //주소 체계, internet protocol
-    serv_addr.sin_addr.s_addr = INADDR_ANY; // 여러 ip주소에서 들어오는 데이터를 모두처리
+    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); // 여러 ip주소에서 들어오는 데이터를 모두처리
     serv_addr.sin_port = htons(PORT); // big endian to little endian
 
     // 서버 소캣 파일 디스크립터에 소캣 정보 (serv_addr) 바인딩
@@ -49,7 +50,7 @@ int main(void){
         perror("listen error");
         exit(1);
     }
-    printf("server listening\n");
+    printf("Server is ready to receive on port %d\n", PORT);
 
     // setect 함수에 사용되는 fd_set 구조체 선언
     fd_set reads, temps;
@@ -58,7 +59,7 @@ int main(void){
     // server listen 소캣을 파일 디스크립터를 fd_set에 등록
     FD_SET(serv_sock, &reads);
     // 서버 소캣을 최대 fd로 설정, 이 값에 +1을 한 값을 반복문으로 처리해서 이후에 있는 클라이언트의 요청을 받는다.
-    int fd_max; = serv_sock;
+    int fd_max = serv_sock;
     printf("serv_sock is : %d\n", serv_sock);
 
     while(1){
@@ -74,15 +75,18 @@ int main(void){
             exit(1);
         }
         // 어떤 fd에서 변화가 일어났는지 확인
-        for(int fd = 0; fd < fd_max+1; fd++){
+        for(int fd = 0; fd < fd_max + 1; fd++){
             // client가 요청을 한 경우 fd가 1인 경우를 확인, 즉 변화가 있는 경우, 2가지 경우가 존재
             if(FD_ISSET(fd, &temps)){
                 // server의 연결 요청인 경우, 즉 서버라면 다시 들어가서 요청을 처리함
                 if(fd == serv_sock){
                     struct sockaddr_in clnt_addr;
-                    int clnt_len = sizeof(clnt_addr);
-                    int clnt_sock = accept(serv_sock, (struct sockaddr *)&clnt_addr, &clnt_len);
+                    socklen_t clnt_len = sizeof(clnt_addr);
                     //해당 클라이언트와 연결시킨다.
+                    int clnt_sock = accept(serv_sock, (struct sockaddr *)&clnt_addr, &clnt_len);
+                    char *client_ip = inet_ntoa(clnt_addr.sin_addr);
+                    int client_port = ntohs(clnt_addr.sin_port);
+                    printf("Connection request from %s:%d\n", client_ip, client_port);
 
                     FD_SET(clnt_sock, &reads); //연결했으므로 해당 원본 set에 1을 넣는다.
                     //9 - 클라이언트가 들어올때마다 최대 fd_max를 갱신
@@ -90,7 +94,6 @@ int main(void){
                         fd_max = clnt_sock;
                     }
                     //해당 client socket번지에 fd_set을 1로 변경하였다~
-                    printf("client access : socket discriptor %d\n", clnt_sock);
                 } else{ //이미 연결된 클라이언트의 요청
                     char message[BUFSIZE];
                     int str_len = read(fd, message, BUFSIZE); //10
@@ -110,3 +113,8 @@ int main(void){
     }
     return 0;
 }
+//
+//void clientHandler(){
+//
+//}
+
