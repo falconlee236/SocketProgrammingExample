@@ -19,16 +19,19 @@
 #include <time.h> //localtime
 #include <signal.h> //signal
 #include <pthread.h> //pthread_create
+#include <ctype.h> //islower, toupper
 
-#define BUFSIZE 100
+#define BUFFER_SIZE 100
 #define PORT 20532
 #define MAX_CLIENT 100
+#define SEC(t) ((t).tv_sec + (t).tv_nsec / 1e+9)
 
 typedef struct s_clientInfo{
     char* ip;
     int port;
     int isvalid;
     int num;
+    int req_num;
 }client_info;
 
 void print_connect_status(int client_num, int total_client_num, int is_connected);
@@ -36,7 +39,13 @@ void* print_server_status(void* arg);
 int find_next_client_num(client_info* client_list, int server_fd, int fd_max);
 void sigint_handler(int signum);
 
+int serv_sock;
+
 int main(void){
+    //server start time
+    struct timespec server_start;
+    clock_gettime(CLOCK_MONOTONIC, &server_start);
+
     //signal
     signal(SIGINT, sigint_handler);
 
@@ -48,21 +57,22 @@ int main(void){
         exit(1);
     }
 
+    // client info array init
     client_info client_arr[MAX_CLIENT + 3];
     for(int i = 0; i < MAX_CLIENT + 3; i++)
         client_arr[i].isvalid = 0;
 
-    int serv_sock = socket(AF_INET, SOCK_STREAM, 0);
+    serv_sock = socket(AF_INET, SOCK_STREAM, 0);
     int opt = 1;
-    setsockopt(serv_sock, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt));
+    setsockopt(serv_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-    struct sockaddr_in serv_addr; //서버 주소 초기화
+    struct sockaddr_in serv_addr; //server address init
     bzero(&serv_addr, sizeof(serv_addr));
-    serv_addr.sin_family = AF_INET; //주소 체계, internet protocol
-    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); // 여러 ip주소에서 들어오는 데이터를 모두처리
+    serv_addr.sin_family = AF_INET; //internet protocol
+    serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); // multiple ip handling
     serv_addr.sin_port = htons(PORT); // big endian to little endian
 
-    // 서버 소캣 파일 디스크립터에 소캣 정보 (serv_addr) 바인딩
+    // bind socket info to server fd
     int binded;
     binded = bind(serv_sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
     if(binded != 0){
@@ -70,7 +80,7 @@ int main(void){
         exit(1);
     }
 
-    // 클라이언트의 연결요청 대기, 뒤에 값은 클라이언트 대기 큐에 있는 요청 최대 개수
+    // waiting client request
     binded = listen(serv_sock, 5);
     if(binded != 0){
         perror("listen error");
@@ -78,27 +88,27 @@ int main(void){
     }
     printf("Server is ready to receive on port %d\n", PORT);
 
-    fd_set reads, temps; // setect 함수에 사용되는 fd_set 구조체 선언
-    FD_ZERO(&reads); // fd_set을 0으로 초기화
-    FD_SET(serv_sock, &reads); // server listen 소캣을 파일 디스크립터를 fd_set에 등록
-    int fd_max = serv_sock; // 서버 소캣을 최대 fd로 설정, 이 값에 +1을 한 값을 반복문으로 처리해서 이후에 있는 클라이언트의 요청을 받는다.
+    fd_set reads, temps;
+    FD_ZERO(&reads); // fd_set init
+    FD_SET(serv_sock, &reads); // assign server fd to reads fd set
+    int fd_max = serv_sock; // assign server socket to max, client request fd is always after this fd_max.
 
     while(1){
         struct timeval timeout;
         timeout.tv_sec = 5;
         timeout.tv_usec = 0;
 
-        temps = reads; // select는 원본값을 변경하기 때문에 값을 복사해준다.
-        if(select(fd_max + 1, &temps, 0, 0, &timeout) < 0){ // 이 함수에서 변화를 감지한다. 감지하면 그 fd를 1로 만들어줌
+        temps = reads; // select change original fd_set value
+        if(select(fd_max + 1, &temps, 0, 0, &timeout) < 0){ // check array changed
             perror("select error");
             exit(1);
         }
-        for(int fd = 0; fd < fd_max + 1; fd++){ // 어떤 fd에서 변화가 일어났는지 확인
-            if(FD_ISSET(fd, &temps)){ // client가 요청을 한 경우 fd가 1인 경우를 확인, 즉 변화가 있는 경우, 2가지 경우가 존재
-                if(fd == serv_sock){ // server의 연결 요청인 경우, 즉 서버라면 다시 들어가서 요청을 처리함
+        for(int fd = 0; fd < fd_max + 1; fd++){ // check which fd changed
+            if(FD_ISSET(fd, &temps)){ // if changed
+                if(fd == serv_sock){ // client request to server connecting case
                     struct sockaddr_in clnt_addr;
                     socklen_t clnt_len = sizeof(clnt_addr);
-                    //해당 클라이언트와 연결시킨다.
+                    // connect that client
                     int clnt_sock = accept(serv_sock, (struct sockaddr *)&clnt_addr, &clnt_len);
                     char *client_ip = inet_ntoa(clnt_addr.sin_addr);
                     int client_port = ntohs(clnt_addr.sin_port);
@@ -107,32 +117,55 @@ int main(void){
                     client_arr[clnt_sock].ip = client_ip;
                     client_arr[clnt_sock].port = client_port;
                     client_arr[clnt_sock].isvalid = 1;
+                    client_arr[clnt_sock].req_num = 0;
                     total_client_num++;
                     print_connect_status(client_arr[clnt_sock].num, total_client_num, 1);
 
-                    FD_SET(clnt_sock, &reads); //연결했으므로 해당 원본 set에 1을 넣는다.
-                    if(fd_max < clnt_sock){ //9 - 클라이언트가 들어올때마다 최대 fd_max를 갱신
+                    FD_SET(clnt_sock, &reads); // set that client fd to 1
+                    if(fd_max < clnt_sock){ // set max fd to that client fd
                         fd_max = clnt_sock;
                     }
-                } else{ //이미 연결된 클라이언트의 요청
-                    char message[BUFSIZE];
-                    int str_len = read(fd, message, BUFSIZE); //10
-                    if(str_len == 0){ //11 연결 종료 요청일경우 여기서는 처리 필요
-                        FD_CLR(fd, &reads); //해당 파일디스크립터 fd를 0으로 변경
+                } else{ // already connected client
+                    char type_str[BUFFER_SIZE];
+                    int str_len = read(fd, type_str, BUFFER_SIZE);
+                    if(str_len == 0){ // disconnect request
+                        FD_CLR(fd, &reads); //change that fd to 0
                         close(fd);
                         client_arr[fd].isvalid = 0;
                         total_client_num--;
                         print_connect_status(client_arr[fd].num, total_client_num, 0);
                     } else {
-                        message[str_len] = '\0';
-                        printf("client : %d message : %s\n", fd, message);
-                        write(fd, message, str_len);
+                        type_str[str_len] = '\0';
+                        printf("Command %s", type_str);
+
+                        char res[BUFFER_SIZE * 5];
+                        if (strncmp(type_str, "1\n", str_len) == 0){
+                            char text[BUFFER_SIZE];
+                            str_len = read(fd, text, BUFFER_SIZE);
+                            for(int i = 0; i < str_len; i++){
+                                if (islower(text[i])) res[i] = toupper(text[i]);
+                                else res[i] = text[i];
+                            }
+                        } else if (strncmp(type_str, "2\n", str_len) == 0){
+                            sprintf(res, "client IP = %s, port = %d\n", client_arr[fd].ip, client_arr[fd].port);
+                        } else if (strncmp(type_str, "3\n", str_len) == 0){
+                            sprintf(res, "request served = %d\n", client_arr[fd].req_num);
+                        } else if (strncmp(type_str, "4\n", str_len) == 0){
+                            struct timespec cur_time;
+                            clock_gettime(CLOCK_MONOTONIC, &cur_time);
+                            long duration = SEC(cur_time) - SEC(server_start);
+                            int hours = duration / 3600;
+                            int minutes = (hours % 3600) / 60;
+                            int seconds = duration % 60;
+                            sprintf(res, "run time = %02d:%02d:%02d\n", hours, minutes, seconds);
+                        }
+                        write(fd, res, strlen(res));
+                        client_arr[fd].req_num++;
                     }
                 }
             }
         }
     }
-    return 0;
 }
 
 void print_connect_status(int client_num, int total_client_num, int is_connected){
@@ -166,7 +199,8 @@ int find_next_client_num(client_info* client_list, int server_fd, int fd_max) {
 }
 
 void sigint_handler(int signum){
-    printf("Bye bye~\n");
+    printf("\nBye bye~\n");
+    if (serv_sock > 0) close(serv_sock);
     exit(signum);
 }
 
@@ -187,9 +221,4 @@ void* print_server_status(void* arg){
         printf("[Time: %s] Number of clients connected = %d\n", time_str, *client_num);
     }
 }
-
-//
-//void clientHandler(){
-//
-//}
 
