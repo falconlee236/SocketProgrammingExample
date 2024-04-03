@@ -16,7 +16,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h> // inet_ntoa
-
+#include <time.h> //localtime
 
 #define BUFSIZE 100
 #define PORT 20532
@@ -29,7 +29,10 @@ typedef struct s_clientInfo{
     int num;
 }client_info;
 
-int main(void){
+void print_connect_status(int client_num, int total_client_num, int is_connected);
+int find_next_client_num(client_info* client_list, int server_fd, int fd_max);
+
+        int main(void){
     int total_client_num = 0;
     client_info client_arr[MAX_CLIENT + 3];
     for(int i = 0; i < MAX_CLIENT + 3; i++)
@@ -65,7 +68,6 @@ int main(void){
     FD_ZERO(&reads); // fd_set을 0으로 초기화
     FD_SET(serv_sock, &reads); // server listen 소캣을 파일 디스크립터를 fd_set에 등록
     int fd_max = serv_sock; // 서버 소캣을 최대 fd로 설정, 이 값에 +1을 한 값을 반복문으로 처리해서 이후에 있는 클라이언트의 요청을 받는다.
-    printf("serv_sock is : %d\n", serv_sock);
 
     while(1){
         struct timeval timeout;
@@ -87,10 +89,12 @@ int main(void){
                     char *client_ip = inet_ntoa(clnt_addr.sin_addr);
                     int client_port = ntohs(clnt_addr.sin_port);
                     printf("Connection request from %s:%d\n", client_ip, client_port);
+                    client_arr[clnt_sock].num = find_next_client_num(client_arr, serv_sock, fd_max);
                     client_arr[clnt_sock].ip = client_ip;
                     client_arr[clnt_sock].port = client_port;
                     client_arr[clnt_sock].isvalid = 1;
-                    client_arr[clnt_sock].num = ++total_client_num;
+                    total_client_num++;
+                    print_connect_status(client_arr[clnt_sock].num, total_client_num, 1);
 
                     FD_SET(clnt_sock, &reads); //연결했으므로 해당 원본 set에 1을 넣는다.
                     if(fd_max < clnt_sock){ //9 - 클라이언트가 들어올때마다 최대 fd_max를 갱신
@@ -102,8 +106,9 @@ int main(void){
                     if(str_len == 0){ //11 연결 종료 요청일경우 여기서는 처리 필요
                         FD_CLR(fd, &reads); //해당 파일디스크립터 fd를 0으로 변경
                         close(fd);
+                        client_arr[fd].isvalid = 0;
                         total_client_num--;
-                        printf("client end : socket discriptor %d\n", fd);
+                        print_connect_status(client_arr[fd].num, total_client_num, 0);
                     } else {
                         message[str_len] = '\0';
                         printf("client : %d message : %s\n", fd, message);
@@ -114,6 +119,41 @@ int main(void){
         }
     }
     return 0;
+}
+
+void print_connect_status(int client_num, int total_client_num, int is_connected){
+    time_t raw_time;
+    struct tm *time_info;
+    char time_str[9];
+
+    time(&raw_time);
+    time_info = localtime(&raw_time);
+
+    strftime(time_str, sizeof(time_str), "%H:%M:%S", time_info);
+    if (is_connected){
+        printf("[Time: %s] Client %d connected. Number of clients connected = %d\n",
+               time_str, client_num, total_client_num);
+    } else {
+        printf("[Time: %s] Client %d disconnected. Number of clients connected = %d\n",
+               time_str, client_num, total_client_num);
+
+    }
+}
+
+int find_next_client_num(client_info* client_list, int server_fd, int fd_max) {
+    int idx = 1;
+//    printf("------\n");
+    for (int i = server_fd + 1; i < fd_max + 1; i++) {
+//        printf("idx = %d valid %d num %d ip = %s port %d\n", i, client_list[i].isvalid, client_list[i].num, client_list[i].ip, client_list[i].port);
+        if (client_list[i].isvalid == 1){
+            if (client_list[i].num == idx)
+                idx++;
+            else
+                return idx;
+        }
+
+    }
+    return idx;
 }
 //
 //void clientHandler(){
