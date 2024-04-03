@@ -10,7 +10,7 @@ OBJS = $(SRCS:.c=.o)
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	$(CC) $^ -o $@
+	$(CC) $^ -o $@ -lpthread
 
 %.o: %.c
 	$(CC) -c $< -o $@
