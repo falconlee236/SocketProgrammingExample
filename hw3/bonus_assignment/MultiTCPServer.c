@@ -18,6 +18,7 @@
 #include <arpa/inet.h> // inet_ntoa
 #include <time.h> //localtime
 #include <signal.h> //signal
+#include <pthread.h> //pthread_create
 
 #define BUFSIZE 100
 #define PORT 20532
@@ -31,13 +32,22 @@ typedef struct s_clientInfo{
 }client_info;
 
 void print_connect_status(int client_num, int total_client_num, int is_connected);
+void* print_server_status(void* arg);
 int find_next_client_num(client_info* client_list, int server_fd, int fd_max);
 void sigint_handler(int signum);
 
 int main(void){
     //signal
     signal(SIGINT, sigint_handler);
+
+    //thread
     int total_client_num = 0;
+    pthread_t print_thread;
+    if (pthread_create(&print_thread, NULL, print_server_status, &total_client_num) != 0){
+        perror("pthread create error");
+        exit(1);
+    }
+
     client_info client_arr[MAX_CLIENT + 3];
     for(int i = 0; i < MAX_CLIENT + 3; i++)
         client_arr[i].isvalid = 0;
@@ -146,16 +156,11 @@ void print_connect_status(int client_num, int total_client_num, int is_connected
 
 int find_next_client_num(client_info* client_list, int server_fd, int fd_max) {
     int idx = 1;
-//    printf("------\n");
     for (int i = server_fd + 1; i < fd_max + 1; i++) {
-//        printf("idx = %d valid %d num %d ip = %s port %d\n", i, client_list[i].isvalid, client_list[i].num, client_list[i].ip, client_list[i].port);
         if (client_list[i].isvalid == 1){
-            if (client_list[i].num == idx)
-                idx++;
-            else
-                return idx;
+            if (client_list[i].num == idx) idx++;
+            else return idx;
         }
-
     }
     return idx;
 }
@@ -164,6 +169,25 @@ void sigint_handler(int signum){
     printf("Bye bye~\n");
     exit(signum);
 }
+
+void* print_server_status(void* arg){
+    while (1){
+        sleep(10);
+
+        time_t raw_time;
+        struct tm *time_info;
+        char time_str[9];
+
+        time(&raw_time);
+        time_info = localtime(&raw_time);
+
+        strftime(time_str, sizeof(time_str), "%H:%M:%S", time_info);
+
+        int* client_num = (int*)arg;
+        printf("[Time: %s] Number of clients connected = %d\n", time_str, *client_num);
+    }
+}
+
 //
 //void clientHandler(){
 //
