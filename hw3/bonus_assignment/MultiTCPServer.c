@@ -17,6 +17,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h> // inet_ntoa
 #include <time.h> //localtime
+#include <signal.h> //signal
 
 #define BUFSIZE 100
 #define PORT 20532
@@ -31,8 +32,11 @@ typedef struct s_clientInfo{
 
 void print_connect_status(int client_num, int total_client_num, int is_connected);
 int find_next_client_num(client_info* client_list, int server_fd, int fd_max);
+void sigint_handler(int signum);
 
-        int main(void){
+int main(void){
+    //signal
+    signal(SIGINT, sigint_handler);
     int total_client_num = 0;
     client_info client_arr[MAX_CLIENT + 3];
     for(int i = 0; i < MAX_CLIENT + 3; i++)
@@ -154,6 +158,11 @@ int find_next_client_num(client_info* client_list, int server_fd, int fd_max) {
 
     }
     return idx;
+}
+
+void sigint_handler(int signum){
+    printf("Bye bye~\n");
+    exit(signum);
 }
 //
 //void clientHandler(){
