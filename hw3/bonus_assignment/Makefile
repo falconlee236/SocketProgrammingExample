@@ -1,3 +1,6 @@
+# Makefile
+# 20190532 sang yun lee
+
 CC = gcc
 
 NAME = multiTCPServer

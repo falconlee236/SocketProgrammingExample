@@ -3,11 +3,6 @@
  * 20190532 Sang yun Lee
  */
 
-/*
- * 참고자료
- * 1. fd_set에 대한 설명 https://blog.naver.com/tipsware/220810795410
- * 2. 이 코드의 reference 한글 https://m.blog.naver.com/whtie5500/221692806173
- */
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>

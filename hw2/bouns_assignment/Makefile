@@ -1,3 +1,6 @@
+# Makefile
+# 20190532 sang yun lee
+
 SRC_DIR := .
 OUT_DIR := .
 SRCS := $(wildcard $(SRC_DIR)/*.java)
