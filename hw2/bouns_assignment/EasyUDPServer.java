@@ -14,28 +14,35 @@ public class EasyUDPServer {
         LocalTime serverStartTime = LocalTime.now();
         final int PORT = 30532;
 
+        // set SIGINT handler
         Runtime.getRuntime().addShutdownHook(new Thread(() -> System.out.println("\nBye bye~")));
 
+        // create UDP socket
         try (DatagramSocket serverSocket = new DatagramSocket(PORT)){
             int reqNum = 0;
             while (true){
                 System.out.printf("The server is ready to receive on port %d\n", PORT);
 
+                // create receive datagram
                 byte[] inputLineBytes = new byte[1000];
                 DatagramPacket receiveInputLinePacket = new DatagramPacket(inputLineBytes, inputLineBytes.length);
+                // receive command type data from client
                 serverSocket.receive(receiveInputLinePacket);
 
+                // get data from packet
                 String inputLine = new String(receiveInputLinePacket.getData()).trim();
                 System.out.println("Command " + inputLine);
 
                 String result = "";
                 if (inputLine.equals("1")){
+                    // get Text data from client
                     byte[] textBytes = new byte[2048];
                     DatagramPacket receiveTextBytesPacket = new DatagramPacket(textBytes, textBytes.length);
                     serverSocket.receive(receiveTextBytesPacket);
 
                     result = new String(receiveTextBytesPacket.getData()).trim().toUpperCase();
                 } else if (inputLine.equals("2")){
+                    // get client ip, client port
                     result = String.format("client IP = %s, port = %d",
                             receiveInputLinePacket.getAddress().getHostAddress(),
                             receiveInputLinePacket.getPort());
@@ -48,10 +55,13 @@ public class EasyUDPServer {
                 }
 
                 byte[] resultBytes = result.getBytes();
+                // get dst address and port from recently received packet
                 InetAddress clientAddress = receiveInputLinePacket.getAddress();
                 int clientPort = receiveInputLinePacket.getPort();
+                // create UDP Packet
                 DatagramPacket sendResultPacket =
                         new DatagramPacket(resultBytes, resultBytes.length, clientAddress, clientPort);
+                // send packet to client
                 serverSocket.send(sendResultPacket);
                 reqNum++;
             }
@@ -59,7 +69,7 @@ public class EasyUDPServer {
 //            e.printStackTrace();
         }
     }
-
+    // change to format
     private static String formatDuration(Duration duration) {
         long hours = duration.toHours();
         long minutes = duration.toMinutes() % 60;

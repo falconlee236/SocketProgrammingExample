@@ -10,13 +10,17 @@ import java.util.Scanner;
 
 public class EasyUDPClient {
     public static void main(String[] args) {
+        // server info
         final String SERVER_ADDRESS = "127.0.0.1";
         final int PORT = 30532;
-        final int TIMEOUT =5000;
+        final int TIMEOUT = 5000;
 
+        // add SIGINT HANDLER
         Runtime.getRuntime().addShutdownHook(new Thread(() -> System.out.println("\nBye bye~")));
 
+        // create UDP client socket
         try (DatagramSocket clientSocket = new DatagramSocket()) {
+            // set timeout to socket
             clientSocket.setSoTimeout(TIMEOUT);
             InetAddress serverAddress = InetAddress.getByName(SERVER_ADDRESS);
             Scanner sc = new Scanner(System.in);
@@ -43,8 +47,10 @@ public class EasyUDPClient {
                 long startTime = System.nanoTime();
                 byte [] strTypeBytes = strType.getBytes();
 
+                // wrap data with UDP Datagram packet
                 DatagramPacket sendStrTypePacket =
                         new DatagramPacket(strTypeBytes, strTypeBytes.length, serverAddress, PORT);
+                // send to specified server
                 clientSocket.send(sendStrTypePacket);
 
                 if (strType.equals("1")){
@@ -61,11 +67,14 @@ public class EasyUDPClient {
                     throw new InterruptedException();
                 }
 
+                // create receive UDP datagram packet
                 byte[] responseBytes = new byte[4096];
                 DatagramPacket receiveResponsePacket =
                         new DatagramPacket(responseBytes, responseBytes.length);
+                // receive data to Datagram
                 clientSocket.receive(receiveResponsePacket);
 
+                // get Data from Datagram
                 String response = new String(receiveResponsePacket.getData());
                 long endTime = System.nanoTime();
                 System.out.println("Reply from server: " + response);

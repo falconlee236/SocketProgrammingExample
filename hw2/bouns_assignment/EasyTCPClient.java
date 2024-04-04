@@ -11,14 +11,16 @@ import java.util.Scanner;
 
 public class EasyTCPClient {
     public static void main(String[] args) {
+        // set server info
         final String SERVER_ADDRESS = "localhost";
         final int PORT = 20532;
 
+        // set SIGINT handler
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("\nBye bye~");
         }));
 
-        try (
+        try ( // create TCP Socket
                 Socket socket = new Socket(SERVER_ADDRESS, PORT);
                 PrintWriter out = new PrintWriter(
                         socket.getOutputStream(), true);
@@ -35,6 +37,7 @@ public class EasyTCPClient {
                 System.out.println("3) get server request count");
                 System.out.println("4) get server running time");
                 System.out.println("5) exit");
+                // get user input
                 System.out.print("Input option: ");
                 String strType = sc.nextLine().replaceFirst("\n", "");;
                 try{
@@ -53,11 +56,13 @@ public class EasyTCPClient {
                     System.out.print("Input sentence: ");
                     String text = sc.nextLine().replaceFirst("\n", "");
                     startTime = System.nanoTime();
+                    // send to Server
                     out.println(text);
                 } else if (strType.equals("5")){
                     System.out.println("Bye bye~");
                     throw new InterruptedException();
                 }
+                // get from Server
                 String response = in.readLine();
                 long endTime = System.nanoTime();
                 System.out.println("Reply from server: " + response);
@@ -65,6 +70,7 @@ public class EasyTCPClient {
                 Thread.sleep(1000); // Optional delay
             }
         } catch (IOException | InterruptedException e) {
+            // is TCP Server Disconnected
             if (e.getClass().getName().equals("java.net.SocketException")){
                 System.out.println("Server Disconnected");
             }

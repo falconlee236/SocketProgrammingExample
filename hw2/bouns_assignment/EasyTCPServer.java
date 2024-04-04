@@ -18,13 +18,16 @@ public class EasyTCPServer {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
         final int PORT = 20532;
 
+        // add SIGINT handler
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("\nBye bye~");
         }));
         try {
             while (true){
                 System.out.printf("The server is ready to receive on port %d\n", PORT);
+                // create TCP Server Socket
                 ServerSocket serverSocket = new ServerSocket(PORT);
+                // accept client request
                 Socket clientSocket = serverSocket.accept();
 
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -32,6 +35,7 @@ public class EasyTCPServer {
 
                 String inputLine;
                 int reqNum = 0;
+                // start client handling, get data from client
                 while ((inputLine = in.readLine()) != null) {
                     System.out.println("Command " + inputLine);
                     String result = "";
@@ -39,6 +43,7 @@ public class EasyTCPServer {
                         result = in.readLine();
                         result = result.toUpperCase();
                     } else if (inputLine.equals("2")){
+                        // get client address, port
                         result = String.format("client IP = %s, port = %d",
                                 clientSocket.getInetAddress(), clientSocket.getPort());
                     } else if (inputLine.equals("3")){
@@ -48,9 +53,11 @@ public class EasyTCPServer {
                         Duration duration = Duration.between(serverStartTime, currentServerTime);
                         result = String.format("run time = %s", formatDuration(duration));
                     }
+                    //send to client
                     out.println(result);
                     reqNum++;
                 }
+                // socket close
                 clientSocket.close();
                 serverSocket.close();
             }
@@ -59,6 +66,7 @@ public class EasyTCPServer {
         }
     }
 
+    // get HH:MM:SS format
     private static String formatDuration(Duration duration) {
         long hours = duration.toHours();
         long minutes = duration.toMinutes() % 60;
