@@ -16,9 +16,11 @@ import (
 )
 
 func main() {
+	// start go routine to get info during 10 second
 	totalClientNum := 0
 	go func(totalClientNum *int) {
 		for {
+			// sleep 10 second
 			time.Sleep(10 * time.Second)
 			currentTimeStr := time.Now().Format("15:04:05")
 			fmt.Printf("[Time: %s] Number of clients connected = %d\n",
@@ -26,6 +28,7 @@ func main() {
 		}
 	}(&totalClientNum)
 
+	// signal handling
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -37,13 +40,16 @@ func main() {
 
 	start := time.Now()
 	serverPort := "20532"
+	// init client id List
 	clientList := make([]int, 2)
 
+	// wait to client request
 	listener, _ := net.Listen("tcp", ":"+serverPort)
 	fmt.Printf("Server is ready to receive on port %s\n", serverPort)
 
 	defer listener.Close()
 	for {
+		// accept client request
 		conn, err := listener.Accept()
 		fmt.Printf("Connection request from %s\n", conn.RemoteAddr().String())
 		if err != nil {
@@ -51,14 +57,17 @@ func main() {
 			break
 		}
 
+		// get next client id
 		nextClientIdx := findNextClientIdx(clientList)
+		// if clientList size not sufficient, append id
 		if len(clientList) <= nextClientIdx {
 			clientList = append(clientList, nextClientIdx+1)
-		} else {
+		} else { // else save that id info
 			clientList[nextClientIdx] = nextClientIdx + 1
 		}
 		totalClientNum++
 
+		// start client handling
 		go TCPClientHandler(conn, start, &totalClientNum, nextClientIdx+1, &clientList)
 	}
 }
@@ -66,19 +75,25 @@ func main() {
 func findNextClientIdx(clientList []int) int {
 	i := 0
 	for i = 0; i < len(clientList); i++ {
+		// if client List empty return that idx
 		if clientList[i] == 0 {
 			return i
 		}
 	}
+	// client all full, return last idx
 	return i
 }
 
 func TCPClientHandler(conn net.Conn, start time.Time,
 	totalClientNum *int, clientNum int, clientList *[]int) {
 	defer conn.Close() //multiple defer function Last in First out
+	// if client request closed, that function called
 	defer func(totalClientNum *int, clientNum int, clientList *[]int) {
+		// reset that client id to 0
 		(*clientList)[clientNum-1] = 0
+		// subtract total client number
 		*totalClientNum -= 1
+		// get current time
 		currentTimeStr := time.Now().Format("15:04:05")
 		fmt.Printf("[Time: %s] Client %d disconnected."+" Number of clients connected = %d\n",
 			currentTimeStr, clientNum, *totalClientNum)
@@ -91,6 +106,7 @@ func TCPClientHandler(conn net.Conn, start time.Time,
 	typeBuffer := make([]byte, 1024)
 	reqNum := 0
 
+	// same to hw2 client handling
 	for {
 		buffer := make([]byte, 1024)
 		t, _ := conn.Read(typeBuffer)

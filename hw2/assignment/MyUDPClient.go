@@ -18,7 +18,7 @@ import (
 )
 
 func main() {
-
+	// signal channel
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -28,15 +28,18 @@ func main() {
 		}
 	}()
 
+	// server info
 	serverName := "localhost"
 	serverPort := "30532"
 
+	// connect to server
 	pconn, err := net.ListenPacket("udp", ":")
 	if err != nil {
 		log.Fatalf("Failed to connect to server: %v", err)
 		return
 	}
 
+	// get server address
 	localAddr := pconn.LocalAddr().(*net.UDPAddr)
 	fmt.Printf("Client is running on port %d\n", localAddr.Port)
 
@@ -47,6 +50,7 @@ func main() {
 		fmt.Printf("3) get server request count\n")
 		fmt.Printf("4) get server running time\n")
 		fmt.Printf("5) exit\n")
+		// input option string
 		fmt.Printf("Input option: ")
 		inputOption, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 		inputNum, _ := strconv.Atoi(strings.TrimRight(inputOption, "\n"))
@@ -54,8 +58,10 @@ func main() {
 			fmt.Print("Invalid option\n")
 			continue
 		}
-		//write to server
+		// start calculate RTT
 		start := time.Now()
+
+		// get datagram to severName
 		server_addr, _ := net.ResolveUDPAddr("udp", serverName+":"+serverPort)
 		pconn.WriteTo([]byte(inputOption), server_addr) // to server - 1
 		if strings.TrimRight(inputOption, "\n") == "1" {
