@@ -16,24 +16,29 @@
 #include <pthread.h> //pthread_create
 #include <ctype.h> //islower, toupper
 
-#define BUFFER_SIZE 100
-#define PORT 20532
-#define MAX_CLIENT 100
-#define SEC(t) ((t).tv_sec + (t).tv_nsec / 1e+9)
+#define BUFFER_SIZE 100 // Max Buffer size
+#define PORT 20532 // Server port number
+#define MAX_CLIENT 100 // Max client number
+#define SEC(t) ((t).tv_sec + (t).tv_nsec / 1e+9) // second to millisecond
 
 typedef struct s_clientInfo{
-    char* ip;
-    int port;
-    int isvalid;
-    int num;
-    int req_num;
+    char* ip; //client ip
+    int port; //client port
+    int isvalid; // 1 : valid information, 0 : invalid information
+    int num; // client id
+    int req_num; // request count of each client
 }client_info;
 
+// print current connect information
 void print_connect_status(int client_num, int total_client_num, int is_connected);
+// print current connect client number using server
 void* print_server_status(void* arg);
+// find next client id number
 int find_next_client_num(client_info* client_list, int server_fd, int fd_max);
+// sigInt handler
 void sigint_handler(int signum);
 
+// global server socket, using close fd when sigint occur
 int serv_sock;
 
 int main(void){
@@ -44,7 +49,7 @@ int main(void){
     //signal
     signal(SIGINT, sigint_handler);
 
-    //thread
+    //create thread to check 10 second
     int total_client_num = 0;
     pthread_t print_thread;
     if (pthread_create(&print_thread, NULL, print_server_status, &total_client_num) != 0){
@@ -57,7 +62,9 @@ int main(void){
     for(int i = 0; i < MAX_CLIENT + 3; i++)
         client_arr[i].isvalid = 0;
 
+    // assign fd for server socket, and IPv4, TCP
     serv_sock = socket(AF_INET, SOCK_STREAM, 0);
+    // allow server to use same port
     int opt = 1;
     setsockopt(serv_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
@@ -108,10 +115,11 @@ int main(void){
                     char *client_ip = inet_ntoa(clnt_addr.sin_addr);
                     int client_port = ntohs(clnt_addr.sin_port);
                     printf("Connection request from %s:%d\n", client_ip, client_port);
+                    // get next client number
                     client_arr[clnt_sock].num = find_next_client_num(client_arr, serv_sock, fd_max);
                     client_arr[clnt_sock].ip = client_ip;
                     client_arr[clnt_sock].port = client_port;
-                    client_arr[clnt_sock].isvalid = 1;
+                    client_arr[clnt_sock].isvalid = 1; // this info is valid
                     client_arr[clnt_sock].req_num = 0;
                     total_client_num++;
                     print_connect_status(client_arr[clnt_sock].num, total_client_num, 1);
@@ -154,6 +162,7 @@ int main(void){
                             int seconds = duration % 60;
                             sprintf(res, "run time = %02d:%02d:%02d\n", hours, minutes, seconds);
                         }
+                        // send to client
                         write(fd, res, strlen(res));
                         client_arr[fd].req_num++;
                     }
@@ -168,6 +177,7 @@ void print_connect_status(int client_num, int total_client_num, int is_connected
     struct tm *time_info;
     char time_str[9];
 
+    // calculate current time
     time(&raw_time);
     time_info = localtime(&raw_time);
 
@@ -185,16 +195,19 @@ void print_connect_status(int client_num, int total_client_num, int is_connected
 int find_next_client_num(client_info* client_list, int server_fd, int fd_max) {
     int idx = 1;
     for (int i = server_fd + 1; i < fd_max + 1; i++) {
+        // when that information is valid
         if (client_list[i].isvalid == 1){
+            // already assigned that number
             if (client_list[i].num == idx) idx++;
-            else return idx;
+            else return idx; // otherwise, return that index
         }
     }
-    return idx;
+    return idx; // all occupied, return last index
 }
 
 void sigint_handler(int signum){
     printf("\nBye bye~\n");
+    // if server socket opened then close that socket
     if (serv_sock > 0) close(serv_sock);
     exit(signum);
 }
