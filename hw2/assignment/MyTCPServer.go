@@ -16,6 +16,7 @@ import (
 )
 
 func main() {
+	// signal channel
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -25,15 +26,18 @@ func main() {
 		}
 	}()
 
+	// start to calculate server time
 	start := time.Now()
 	reqNum := 0
 	serverPort := "20532"
 
+	// wait to client request
 	listener, _ := net.Listen("tcp", ":"+serverPort)
 	fmt.Printf("Server is ready to receive on port %s\n", serverPort)
 
 	defer listener.Close()
 	for {
+		// accept client request
 		conn, err := listener.Accept()
 		fmt.Printf("Connection request from %s\n", conn.RemoteAddr().String())
 		if err != nil {
@@ -41,6 +45,7 @@ func main() {
 			break
 		}
 
+		// start client handling
 		go TCPClientHandler(conn, reqNum, start)
 	}
 }
@@ -51,6 +56,7 @@ func TCPClientHandler(conn net.Conn, reqNum int, start time.Time) {
 	typeBuffer := make([]byte, 1024)
 
 	for {
+		// get data from server
 		buffer := make([]byte, 1024)
 		t, _ := conn.Read(typeBuffer)
 		if t == 0 {
@@ -69,12 +75,14 @@ func TCPClientHandler(conn net.Conn, reqNum int, start time.Time) {
 		} else if typeStr == "3" {
 			result = fmt.Sprintf("request served = %d\n", reqNum)
 		} else if typeStr == "4" {
+			// change to millisecond
 			duration := time.Since(start)
 			hour := int(duration.Seconds() / 3600)
 			minute := int(duration.Seconds()/60) % 60
 			second := int(duration.Seconds()) % 60
 			result = fmt.Sprintf("run time = %02d:%02d:%02d\n", hour, minute, second)
 		}
+		// return to server
 		conn.Write([]byte(result))
 		reqNum++
 	}

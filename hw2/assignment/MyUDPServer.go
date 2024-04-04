@@ -25,15 +25,17 @@ func main() {
 		}
 	}()
 
+	// start calculating server time
 	start := time.Now()
 	reqNum := 0
 	serverPort := "30532"
+	// wait to client request
 	pconn, _ := net.ListenPacket("udp", ":"+serverPort)
 	fmt.Printf("Server is ready to receive on port %s\n", serverPort)
 	for {
-
 		typeBuffer := make([]byte, 1024)
 		buffer := make([]byte, 1024)
+		// get datagram
 		count, r_addr, _ := pconn.ReadFrom(typeBuffer) // from client -1
 		if count == 0 {
 			return
@@ -52,6 +54,7 @@ func main() {
 		} else if typeStr == "3" {
 			result = fmt.Sprintf("request served = %d\n", reqNum)
 		} else if typeStr == "4" {
+			// change to millisecond
 			duration := time.Since(start)
 			hour := int(duration.Seconds() / 3600)
 			minute := int(duration.Seconds()/60) % 60
