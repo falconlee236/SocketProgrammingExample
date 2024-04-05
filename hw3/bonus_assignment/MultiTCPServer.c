@@ -26,7 +26,6 @@ typedef struct s_clientInfo{
     int port; //client port
     int isvalid; // 1 : valid information, 0 : invalid information
     int num; // client id
-    int req_num; // request count of each client
 }client_info;
 
 // print current connect information
@@ -42,6 +41,7 @@ void sigint_handler(int signum);
 int serv_sock;
 
 int main(void){
+    int total_req_num = 0;
     //server start time
     struct timespec server_start;
     clock_gettime(CLOCK_MONOTONIC, &server_start);
@@ -120,7 +120,6 @@ int main(void){
                     client_arr[clnt_sock].ip = client_ip;
                     client_arr[clnt_sock].port = client_port;
                     client_arr[clnt_sock].isvalid = 1; // this info is valid
-                    client_arr[clnt_sock].req_num = 0;
                     total_client_num++;
                     print_connect_status(client_arr[clnt_sock].num, total_client_num, 1);
 
@@ -141,7 +140,7 @@ int main(void){
                         type_str[str_len] = '\0';
                         printf("Command %s", type_str);
 
-                        char res[BUFFER_SIZE * 5];
+                        char res[BUFFER_SIZE * 5] = {0, };
                         if (strncmp(type_str, "1\n", str_len) == 0){
                             char text[BUFFER_SIZE];
                             str_len = read(fd, text, BUFFER_SIZE);
@@ -152,7 +151,7 @@ int main(void){
                         } else if (strncmp(type_str, "2\n", str_len) == 0){
                             sprintf(res, "client IP = %s, port = %d\n", client_arr[fd].ip, client_arr[fd].port);
                         } else if (strncmp(type_str, "3\n", str_len) == 0){
-                            sprintf(res, "request served = %d\n", client_arr[fd].req_num);
+                            sprintf(res, "request served = %d\n", total_req_num);
                         } else if (strncmp(type_str, "4\n", str_len) == 0){
                             struct timespec cur_time;
                             clock_gettime(CLOCK_MONOTONIC, &cur_time);
@@ -164,7 +163,7 @@ int main(void){
                         }
                         // send to client
                         write(fd, res, strlen(res));
-                        client_arr[fd].req_num++;
+                        total_req_num++;
                     }
                 }
             }
