@@ -63,7 +63,6 @@ public class EasyUDPClient {
                             new DatagramPacket(textBytes, textBytes.length, serverAddress, PORT);
                     clientSocket.send(sendTextPacket);
                 } else if (strType.equals("5")){
-                    System.out.println("Bye bye~");
                     throw new InterruptedException();
                 }
 

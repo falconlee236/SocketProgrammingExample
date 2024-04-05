@@ -32,6 +32,7 @@ public class EasyTCPServer {
 
                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                System.out.printf("Connection request from %s:%s\n", clientSocket.getInetAddress(), clientSocket.getPort());
 
                 String inputLine;
                 int reqNum = 0;

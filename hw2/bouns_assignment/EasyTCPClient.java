@@ -59,11 +59,14 @@ public class EasyTCPClient {
                     // send to Server
                     out.println(text);
                 } else if (strType.equals("5")){
-                    System.out.println("Bye bye~");
                     throw new InterruptedException();
                 }
                 // get from Server
                 String response = in.readLine();
+                if (response == null){
+                    System.out.println("server disconnected\n");
+                    throw new InterruptedException();
+                }
                 long endTime = System.nanoTime();
                 System.out.println("Reply from server: " + response);
                 System.out.printf("RTT = %fms\n", (endTime - startTime) / 1e+6);

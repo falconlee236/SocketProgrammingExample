@@ -29,6 +29,8 @@ public class EasyUDPServer {
                 // receive command type data from client
                 serverSocket.receive(receiveInputLinePacket);
 
+                System.out.printf("Connection request from %s:%s\n", receiveInputLinePacket.getAddress(), receiveInputLinePacket.getPort());
+
                 // get data from packet
                 String inputLine = new String(receiveInputLinePacket.getData()).trim();
                 System.out.println("Command " + inputLine);
