@@ -17,7 +17,7 @@ public class EasyTCPServer {
         LocalTime serverStartTime = LocalTime.now();
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
         final int PORT = 20532;
-
+		int reqNum = 0;
         // add SIGINT handler
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("\nBye bye~");
@@ -35,7 +35,6 @@ public class EasyTCPServer {
                 System.out.printf("Connection request from %s:%s\n", clientSocket.getInetAddress(), clientSocket.getPort());
 
                 String inputLine;
-                int reqNum = 0;
                 // start client handling, get data from client
                 while ((inputLine = in.readLine()) != null) {
                     System.out.println("Command " + inputLine);
