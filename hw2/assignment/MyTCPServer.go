@@ -46,11 +46,11 @@ func main() {
 		}
 
 		// start client handling
-		go TCPClientHandler(conn, reqNum, start)
+		go TCPClientHandler(conn, &reqNum, start)
 	}
 }
 
-func TCPClientHandler(conn net.Conn, reqNum int, start time.Time) {
+func TCPClientHandler(conn net.Conn, reqNum *int, start time.Time) {
 	defer conn.Close()
 
 	typeBuffer := make([]byte, 1024)
@@ -73,7 +73,7 @@ func TCPClientHandler(conn net.Conn, reqNum int, start time.Time) {
 			addrs := strings.Split(conn.RemoteAddr().String(), ":")
 			result = fmt.Sprintf("client IP = %s, port = %s\n", addrs[0], addrs[1])
 		} else if typeStr == "3" {
-			result = fmt.Sprintf("request served = %d\n", reqNum)
+			result = fmt.Sprintf("request served = %d\n", *reqNum)
 		} else if typeStr == "4" {
 			// change to millisecond
 			duration := time.Since(start)
@@ -84,6 +84,6 @@ func TCPClientHandler(conn net.Conn, reqNum int, start time.Time) {
 		}
 		// return to server
 		conn.Write([]byte(result))
-		reqNum++
+		(*reqNum)++
 	}
 }

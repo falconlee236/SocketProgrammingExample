@@ -16,6 +16,7 @@ import (
 )
 
 func main() {
+	reqNum := 0
 	// start go routine to get info during 10 second
 	totalClientNum := 0
 	go func(totalClientNum *int) {
@@ -68,7 +69,7 @@ func main() {
 		totalClientNum++
 
 		// start client handling
-		go TCPClientHandler(conn, start, &totalClientNum, nextClientIdx+1, &clientList)
+		go TCPClientHandler(conn, start, &reqNum, &totalClientNum, nextClientIdx+1, &clientList)
 	}
 }
 
@@ -84,8 +85,7 @@ func findNextClientIdx(clientList []int) int {
 	return i
 }
 
-func TCPClientHandler(conn net.Conn, start time.Time,
-	totalClientNum *int, clientNum int, clientList *[]int) {
+func TCPClientHandler(conn net.Conn, start time.Time, reqNum *int, totalClientNum *int, clientNum int, clientList *[]int) {
 	defer conn.Close() //multiple defer function Last in First out
 	// if client request closed, that function called
 	defer func(totalClientNum *int, clientNum int, clientList *[]int) {
@@ -104,7 +104,6 @@ func TCPClientHandler(conn net.Conn, start time.Time,
 		currentTimeStr, clientNum, *totalClientNum)
 
 	typeBuffer := make([]byte, 1024)
-	reqNum := 0
 
 	// same to hw2 client handling
 	for {
@@ -124,7 +123,7 @@ func TCPClientHandler(conn net.Conn, start time.Time,
 			addrs := strings.Split(conn.RemoteAddr().String(), ":")
 			result = fmt.Sprintf("client IP = %s, port = %s\n", addrs[0], addrs[1])
 		} else if typeStr == "3" {
-			result = fmt.Sprintf("request served = %d\n", reqNum)
+			result = fmt.Sprintf("request served = %d\n", *reqNum)
 		} else if typeStr == "4" {
 			duration := time.Since(start)
 			hour := int(duration.Seconds() / 3600)
@@ -133,6 +132,6 @@ func TCPClientHandler(conn net.Conn, start time.Time,
 			result = fmt.Sprintf("run time = %02d:%02d:%02d\n", hour, minute, second)
 		}
 		conn.Write([]byte(result))
-		reqNum++
+		(*reqNum)++
 	}
 }
