@@ -24,7 +24,6 @@
 typedef struct s_clientInfo{
     char* ip; //client ip
     int port; //client port
-    int isvalid; // 1 : valid information, 0 : invalid information
     int num; // client id
 }client_info;
 
@@ -32,8 +31,6 @@ typedef struct s_clientInfo{
 void print_connect_status(int client_num, int total_client_num, int is_connected);
 // print current connect client number using server
 void* print_server_status(void* arg);
-// find next client id number
-int find_next_client_num(client_info* client_list, int server_fd, int fd_max);
 // sigInt handler
 void sigint_handler(int signum);
 
@@ -59,8 +56,6 @@ int main(void){
 
     // client info array init
     client_info client_arr[MAX_CLIENT + 3];
-    for(int i = 0; i < MAX_CLIENT + 3; i++)
-        client_arr[i].isvalid = 0;
 
     // assign fd for server socket, and IPv4, TCP
     serv_sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -94,6 +89,7 @@ int main(void){
     FD_ZERO(&reads); // fd_set init
     FD_SET(serv_sock, &reads); // assign server fd to reads fd set
     int fd_max = serv_sock; // assign server socket to max, client request fd is always after this fd_max.
+    int client_id = 0;
 
     while(1){
         struct timeval timeout;
@@ -116,10 +112,9 @@ int main(void){
                     int client_port = ntohs(clnt_addr.sin_port);
                     printf("Connection request from %s:%d\n", client_ip, client_port);
                     // get next client number
-                    client_arr[clnt_sock].num = find_next_client_num(client_arr, serv_sock, fd_max);
+                    client_arr[clnt_sock].num = ++client_id;
                     client_arr[clnt_sock].ip = client_ip;
                     client_arr[clnt_sock].port = client_port;
-                    client_arr[clnt_sock].isvalid = 1; // this info is valid
                     total_client_num++;
                     print_connect_status(client_arr[clnt_sock].num, total_client_num, 1);
 
@@ -133,7 +128,6 @@ int main(void){
                     if(str_len == 0){ // disconnect request
                         FD_CLR(fd, &reads); //change that fd to 0
                         close(fd);
-                        client_arr[fd].isvalid = 0;
                         total_client_num--;
                         print_connect_status(client_arr[fd].num, total_client_num, 0);
                     } else {
@@ -189,19 +183,6 @@ void print_connect_status(int client_num, int total_client_num, int is_connected
                time_str, client_num, total_client_num);
 
     }
-}
-
-int find_next_client_num(client_info* client_list, int server_fd, int fd_max) {
-    int idx = 1;
-    for (int i = server_fd + 1; i < fd_max + 1; i++) {
-        // when that information is valid
-        if (client_list[i].isvalid == 1){
-            // already assigned that number
-            if (client_list[i].num == idx) idx++;
-            else return idx; // otherwise, return that index
-        }
-    }
-    return idx; // all occupied, return last index
 }
 
 void sigint_handler(int signum){
