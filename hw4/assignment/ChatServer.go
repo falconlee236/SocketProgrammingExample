@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 )
 
 func main() {
@@ -91,39 +92,82 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 		//accept response message
 		msgRes := make([]byte, 1024)
 		t, _ := conn.Read(msgRes)
-		// if that message is command
+		if t == 0 {
+			return
+		}
+		// if that message is ls, ping, quit command or invalid command
 		if t == 1 {
 			command := msgRes[t-1]
 			// if command is invalid
 			if command == 0 {
 				fmt.Println("Invalid command received from client")
-			} else if command == 1 {
+			} else if command == 1 { // ls command
 				sendMsg := ""
+				// iterate all map structure
 				for nickname, otherConn := range *clientMap {
+					// split connection to ip, port
 					ip, port, _ := net.SplitHostPort(otherConn.RemoteAddr().String())
+					// add info
 					sendMsg += fmt.Sprintf("<%s, %s, %s>\n", nickname, ip, port)
 				}
 				conn.Write([]byte(sendMsg))
-			} else if command == 4 {
+			} else if command == 4 { // ping command
+				// return ping byte back
 				conn.Write(msgRes[:t])
-			} else if command == 5 {
+			} else if command == 5 { // quit command
 				sendMsg := fmt.Sprintf("[%s left the room.]\n[There are %d users now.]\n\n", nicknameStr, *totalClientNum-1)
+				// send msg to other client
 				for nickname, otherConn := range *clientMap {
 					if nickname == nicknameStr {
 						continue
 					}
 					otherConn.Write([]byte(sendMsg))
 				}
+				// send msg to server
 				fmt.Printf(sendMsg)
+				// finish client
 				return
 			}
-		} else { // otherwise, message
+		} else if msgRes[0] == 0 { // invalid command, within space in msg
+			fmt.Println("Invalid command: " + string(msgRes[1:]))
+		} else if msgRes[0] == 2 || msgRes[0] == 3 { // valid command, command secret, except
+			msgArr := strings.SplitN(string(msgRes[1:t-1]), " ", 2)
+			// command parameter error
+			if len(msgArr) != 2 {
+				fmt.Println("Invalid command: " + string(msgRes[1:]))
+				continue
+			}
+			// split nickname, msg
+			commandNickname := msgArr[0]
+			commandMsg := msgArr[1]
+			// secret command
+			if msgRes[0] == 2 {
+				// get nickname connection info
+				secretConn, isExist := (*clientMap)[commandNickname]
+				// if that nickname does not exist in map
+				if !isExist {
+					fmt.Println("Invalid command: " + string(msgRes[1:]))
+					continue
+				}
+				sendMsg := fmt.Sprintf("from: %s> %s\n", nicknameStr, commandMsg)
+				secretConn.Write([]byte(sendMsg))
+			} else if msgRes[0] == 3 { // sxcept command
+				for nickname, otherConn := range *clientMap {
+					// find except nickname, don't send msg to that nickname
+					if nickname == commandNickname {
+						continue
+					}
+					sendMsg := fmt.Sprintf("from: %s> %s\n", nicknameStr, commandMsg)
+					otherConn.Write([]byte(sendMsg))
+				}
+			}
+		} else { // otherwise
 			msg := string(msgRes[:t-1])
 			for nickname, otherConn := range *clientMap {
 				if nickname == nicknameStr {
 					continue
 				}
-				sendMsg := fmt.Sprintf("%s> %s\n", nickname, msg)
+				sendMsg := fmt.Sprintf("%s> %s\n", nicknameStr, msg)
 				otherConn.Write([]byte(sendMsg))
 			}
 		}

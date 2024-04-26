@@ -107,18 +107,28 @@ func main() {
 		commandIdx := strings.IndexByte(msgInput, '\\')
 		// if command
 		if commandIdx == 0 {
-			commandMsg := strings.TrimRight(msgInput[1:], "\n")
+			msgInput = strings.TrimRight(msgInput, "\n")
+			msgArr := strings.SplitN(msgInput, " ", 2)
+			command := msgArr[0][1:]
 			// encoding command to 1byte
-			byteValue, isExist := commandMap[commandMsg]
+			byteValue, isExist := commandMap[command]
 			// cannot find in command table
 			if !isExist {
 				fmt.Println("Invalid command")
 			}
-			// start calculate start time
-			currentTime = time.Now()
-			_, err := conn.Write([]byte{byteValue})
-			if err != nil {
-				log.Fatalf("Failed to connect to server\n%v", err)
+			if len(msgArr) > 1 {
+				msg := msgArr[1]
+				_, err := conn.Write(append([]byte{byteValue}, []byte(msg)...))
+				if err != nil {
+					log.Fatalf("Failed to connect to server\n%v", err)
+				}
+			} else {
+				// start calculate start time
+				currentTime = time.Now()
+				_, err := conn.Write([]byte{byteValue})
+				if err != nil {
+					log.Fatalf("Failed to connect to server\n%v", err)
+				}
 			}
 		} else {
 			_, err := conn.Write([]byte(msgInput))
@@ -127,15 +137,5 @@ func main() {
 			}
 		}
 		fmt.Println()
-		//if strings.TrimRight(msgInput, "\n") == "1" {
-		//	fmt.Printf("Input lowercase sentence: ")
-		//	input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-		//	start = time.Now()
-		//	conn.Write([]byte(input))
-		//} else if strings.TrimRight(msgInput, "\n") == "5" {
-		//	fmt.Printf("Bye bye~")
-		//	return
-		//}
-		//duration := time.Since(start)
 	}
 }
