@@ -52,13 +52,13 @@ func main() {
 		_, isExist := clientMap[nicknameStr]
 		var nicknameRes string = ""
 		if len(clientMap) == 8 {
-			nicknameRes = fmt.Sprintf("chatting room full. cannot connect\n")
+			nicknameRes = fmt.Sprintf("404\nchatting room full. cannot connect\n")
 		} else if isExist {
-			nicknameRes = fmt.Sprintf("nickname already used by another user. cannot connect\n")
+			nicknameRes = fmt.Sprintf("404\nnickname already used by another user. cannot connect\n")
 		} else {
 			clientMap[nicknameStr] = conn
 			totalClientNum++
-			nicknameRes = fmt.Sprintf("[welcome %s to CAU net-class chat room at %s]\n"+
+			nicknameRes = fmt.Sprintf("200\n[welcome %s to CAU net-class chat room at %s]\n"+
 				"[There are %d users in the room]\n", nicknameStr, conn.LocalAddr(), totalClientNum)
 		}
 		conn.Write([]byte(nicknameRes))

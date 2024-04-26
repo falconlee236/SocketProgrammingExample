@@ -45,17 +45,17 @@ func main() {
 		log.Fatalf("Failed to connect to server: %v", err)
 		return
 	}
-
-	// get server address
-	localAddr := conn.LocalAddr().(*net.TCPAddr)
-	fmt.Printf("Client is running on port %d\n", localAddr.Port)
 	defer conn.Close()
 
 	// send nickname to server
 	conn.Write([]byte(nickname))
-	nicknameResBuffer := make([]byte, 1024)
-	cnt, _ := conn.Read(nicknameResBuffer)
-	fmt.Printf(string(nicknameResBuffer[:cnt]))
+	accessResBuffer := make([]byte, 1024)
+	cnt, _ := conn.Read(accessResBuffer)
+	accessRes := strings.SplitN(string(accessResBuffer[:cnt]), "\n", 2)
+	fmt.Println(accessRes[1])
+	if accessRes[0] == "404" {
+		return
+	}
 
 	for {
 		fmt.Printf("<Menu>\n")
