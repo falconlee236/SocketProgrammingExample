@@ -131,7 +131,7 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 		} else if msgRes[0] == 0 { // invalid command, within space in msg
 			fmt.Println("Invalid command: " + string(msgRes[1:]))
 		} else if msgRes[0] == 2 || msgRes[0] == 3 { // valid command, command secret, except
-			msgArr := strings.SplitN(string(msgRes[1:t-1]), " ", 2)
+			msgArr := strings.SplitN(string(msgRes[1:t]), " ", 2)
 			// command parameter error
 			if len(msgArr) != 2 {
 				fmt.Println("Invalid command: " + string(msgRes[1:]))
@@ -140,6 +140,15 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 			// split nickname, msg
 			commandNickname := msgArr[0]
 			commandMsg := msgArr[1]
+			if strings.Contains(strings.ToLower(commandMsg), strings.ToLower("I hate professor")) {
+				sendMsg := fmt.Sprintf("[%s is disconnected.]\n"+
+					"[There are %d users in the chat room.]\n", nicknameStr, *totalClientNum-1)
+				for _, otherConn := range *clientMap {
+					otherConn.Write([]byte(sendMsg))
+				}
+				fmt.Print(sendMsg)
+				return
+			}
 			// secret command
 			if msgRes[0] == 2 {
 				// get nickname connection info
@@ -163,6 +172,15 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 			}
 		} else { // otherwise
 			msg := string(msgRes[:t-1])
+			if strings.Contains(strings.ToLower(msg), strings.ToLower("I hate professor")) {
+				sendMsg := fmt.Sprintf("[%s is disconnected.]\n"+
+					"[There are %d users in the chat room.]\n", nicknameStr, *totalClientNum-1)
+				for _, otherConn := range *clientMap {
+					otherConn.Write([]byte(sendMsg))
+				}
+				fmt.Print(sendMsg)
+				return
+			}
 			for nickname, otherConn := range *clientMap {
 				if nickname == nicknameStr {
 					continue
