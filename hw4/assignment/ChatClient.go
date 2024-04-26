@@ -57,11 +57,10 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func(conn net.Conn) {
-		for range c {
-			conn.Write([]byte{commandMap["quit"]})
-			fmt.Print("\ngg~\n")
-			os.Exit(1)
-		}
+		<-c
+		conn.Write([]byte{commandMap["quit"]})
+		fmt.Print("\ngg~\n")
+		os.Exit(1)
 	}(conn)
 
 	for {
