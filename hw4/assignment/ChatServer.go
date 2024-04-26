@@ -51,19 +51,23 @@ func main() {
 		nicknameStr := string(nicknameBuffer[:cnt])
 		_, isExist := clientMap[nicknameStr]
 		var nicknameRes string = ""
+		var nicknameStatusCode int = 200
 		if len(clientMap) == 8 {
-			nicknameRes = fmt.Sprintf("404\nchatting room full. cannot connect\n")
+			nicknameStatusCode = 404
+			nicknameRes = fmt.Sprintf("%d\nchatting room full. cannot connect\n", nicknameStatusCode)
 		} else if isExist {
-			nicknameRes = fmt.Sprintf("404\nnickname already used by another user. cannot connect\n")
+			nicknameRes = fmt.Sprintf("%d\nnickname already used by another user. cannot connect\n", nicknameStatusCode)
 		} else {
 			clientMap[nicknameStr] = conn
 			totalClientNum++
-			nicknameRes = fmt.Sprintf("200\n[welcome %s to CAU net-class chat room at %s]\n"+
-				"[There are %d users in the room]\n", nicknameStr, conn.LocalAddr(), totalClientNum)
+			nicknameRes = fmt.Sprintf("%d\n[welcome %s to CAU net-class chat room at %s]\n"+
+				"[There are %d users in the room]\n", nicknameStatusCode, nicknameStr, conn.LocalAddr(), totalClientNum)
 		}
 		conn.Write([]byte(nicknameRes))
 		// start client handling
-		go TCPClientHandler(conn, &totalClientNum)
+		if nicknameStatusCode == 200 {
+			go TCPClientHandler(conn, &totalClientNum)
+		}
 	}
 }
 
