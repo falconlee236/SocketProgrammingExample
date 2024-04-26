@@ -52,7 +52,7 @@ func main() {
 	accessResBuffer := make([]byte, 1024)
 	cnt, _ := conn.Read(accessResBuffer)
 	accessRes := strings.SplitN(string(accessResBuffer[:cnt]), "\n", 2)
-	fmt.Println(accessRes[1])
+	fmt.Print(accessRes[1])
 	if accessRes[0] == "404" {
 		return
 	}

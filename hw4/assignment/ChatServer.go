@@ -25,7 +25,7 @@ func main() {
 		}
 	}()
 
-	// totalClient
+	// totalClient number
 	totalClientNum := 0
 	serverPort := "20532"
 	// init client id List
@@ -39,7 +39,6 @@ func main() {
 	for {
 		// accept client request
 		conn, err := listener.Accept()
-		fmt.Printf("Connection request from %s\n", conn.RemoteAddr().String())
 		if err != nil {
 			fmt.Println(err)
 			break
@@ -49,24 +48,31 @@ func main() {
 		nicknameBuffer := make([]byte, 40)
 		cnt, _ := conn.Read(nicknameBuffer)
 		nicknameStr := string(nicknameBuffer[:cnt])
+
+		//check client string already exist
 		_, isExist := clientMap[nicknameStr]
 		var nicknameRes string = ""
+		// nickname handle status code
 		var nicknameStatusCode int = 200
 		if totalClientNum == 8 {
 			nicknameStatusCode = 404
-			nicknameRes = fmt.Sprintf("%d\nchatting room full. cannot connect\n", nicknameStatusCode)
+			nicknameRes = fmt.Sprintf("%d\n[chatting room full. cannot connect.]\n", nicknameStatusCode)
 		} else if isExist {
 			nicknameStatusCode = 404
-			nicknameRes = fmt.Sprintf("%d\nnickname already used by another user. cannot connect\n", nicknameStatusCode)
+			nicknameRes = fmt.Sprintf("%d\n[nickname already used by another user. cannot connect.]\n", nicknameStatusCode)
 		} else {
+			// add client name and connection info
 			clientMap[nicknameStr] = conn
+			// increase client count
 			totalClientNum++
-			nicknameRes = fmt.Sprintf("%d\n[welcome %s to CAU net-class chat room at %s]\n"+
-				"[There are %d users in the room]\n", nicknameStatusCode, nicknameStr, conn.LocalAddr(), totalClientNum)
+			nicknameRes = fmt.Sprintf("%d\n[welcome %s to CAU net-class chat room at %s.]\n"+
+				"[There are %d users in the room.]\n", nicknameStatusCode, nicknameStr, conn.LocalAddr(), totalClientNum)
 		}
 		conn.Write([]byte(nicknameRes))
 		// start client handling
 		if nicknameStatusCode == 200 {
+			fmt.Printf("[%s has joined from %s.]\n"+
+				"[There are %d users in room.]\n", nicknameStr, conn.RemoteAddr().String(), totalClientNum)
 			go TCPClientHandler(conn, &totalClientNum, &clientMap, nicknameStr)
 		}
 	}
