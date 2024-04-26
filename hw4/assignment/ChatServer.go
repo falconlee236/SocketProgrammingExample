@@ -98,7 +98,13 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 			}
 		} else {
 			msg := string(msgRes[:t-1])
-			fmt.Println(msg)
+			for nickname, otherConn := range *clientMap {
+				if nickname == nicknameStr {
+					continue
+				}
+				sendMsg := fmt.Sprintf("%s> %s\n", nickname, msg)
+				otherConn.Write([]byte(sendMsg))
+			}
 		}
 
 		//var result string = ""

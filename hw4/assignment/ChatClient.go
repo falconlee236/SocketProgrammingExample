@@ -73,6 +73,20 @@ func main() {
 		os.Exit(1)
 	}(conn)
 
+	// Listen for incoming messages from the client
+	go func(conn net.Conn) {
+		for {
+			// read from server
+			buffer := make([]byte, 1024)
+			read, err := conn.Read(buffer)
+			if err != nil || read == 0 {
+				log.Fatalf("Failed to connect to server: %v", err)
+				return
+			}
+			fmt.Println(string(buffer[:read]))
+		}
+	}(conn)
+
 	for {
 		msgInput, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 		commandIdx := strings.IndexByte(msgInput, '\\')
@@ -96,7 +110,7 @@ func main() {
 				log.Fatalf("Failed to connect to server\n%v", err)
 			}
 		}
-
+		fmt.Println()
 		//if strings.TrimRight(msgInput, "\n") == "1" {
 		//	fmt.Printf("Input lowercase sentence: ")
 		//	input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
@@ -106,14 +120,7 @@ func main() {
 		//	fmt.Printf("Bye bye~")
 		//	return
 		//}
-		//// read from server
-		//buffer := make([]byte, 1024)
-		//read, err := conn.Read(buffer)
 		//duration := time.Since(start)
-		//if err != nil || read == 0 {
-		//	log.Fatalf("Failed to connect to server: %v", err)
-		//	return
-		//}
 		//// return microsecond
 		//fmt.Printf("\nReply from server: %s", string(buffer))
 		//fmt.Printf("RTT = %fms\n", float64(duration.Nanoseconds())/1e+6)
