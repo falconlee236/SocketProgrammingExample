@@ -88,8 +88,10 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 	}(totalClientNum, clientMap, nicknameStr)
 
 	for {
+		//accept response message
 		msgRes := make([]byte, 1024)
 		t, _ := conn.Read(msgRes)
+		// if that message is command
 		if t == 1 {
 			command := msgRes[t-1]
 			if command == 5 {
@@ -103,7 +105,7 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 				fmt.Printf(sendMsg)
 				return
 			}
-		} else {
+		} else { // otherwise, message
 			msg := string(msgRes[:t-1])
 			for nickname, otherConn := range *clientMap {
 				if nickname == nicknameStr {
@@ -113,19 +115,5 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 				otherConn.Write([]byte(sendMsg))
 			}
 		}
-
-		//var result string = ""
-		//if typeStr == "1" {
-		//	count, _ := conn.Read(buffer)
-		//	result = string(bytes.ToUpper(buffer[:count]))
-		//} else if typeStr == "2" {
-		//	addrs := strings.Split(conn.RemoteAddr().String(), ":")
-		//	result = fmt.Sprintf("client IP = %s, port = %s\n", addrs[0], addrs[1])
-		//} else if typeStr == "3" {
-		//	result = fmt.Sprintf("request served = %d\n", reqNum)
-		//} else if typeStr == "4" {
-		//
-		//}
-		//conn.Write([]byte(result))
 	}
 }

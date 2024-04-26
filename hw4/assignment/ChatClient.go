@@ -96,7 +96,8 @@ func main() {
 			fmt.Println("Command:", commandMsg)
 			byteValue, isExist := commandMap[commandMsg]
 			if !isExist {
-				log.Fatalf("Failed to connect to server\n%v", err)
+				fmt.Println("Invalid command:")
+				continue
 			}
 			_, err := conn.Write([]byte{byteValue})
 			if err != nil {
