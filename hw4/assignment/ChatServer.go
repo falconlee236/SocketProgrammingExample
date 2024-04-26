@@ -6,12 +6,10 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"net"
 	"os"
 	"os/signal"
-	"strings"
 )
 
 func main() {
@@ -89,32 +87,29 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 		delete(*clientMap, nicknameStr)
 	}(totalClientNum, clientMap, nicknameStr)
 
-	typeBuffer := make([]byte, 1024)
-	reqNum := 0
-
-	// same to hw2 client handling
 	for {
-		buffer := make([]byte, 1024)
-		t, _ := conn.Read(typeBuffer)
-		if t == 0 {
-			return
+		msgRes := make([]byte, 1024)
+		t, _ := conn.Read(msgRes)
+		if t == 1 {
+			fmt.Println(t)
+			fmt.Println(string(msgRes[:t]))
+		} else {
+			msg := string(msgRes[:t-1])
+			fmt.Println(msg)
 		}
-		typeStr := string(typeBuffer[:t-1])
-		fmt.Printf("Command %s\n", typeStr)
 
-		var result string = ""
-		if typeStr == "1" {
-			count, _ := conn.Read(buffer)
-			result = string(bytes.ToUpper(buffer[:count]))
-		} else if typeStr == "2" {
-			addrs := strings.Split(conn.RemoteAddr().String(), ":")
-			result = fmt.Sprintf("client IP = %s, port = %s\n", addrs[0], addrs[1])
-		} else if typeStr == "3" {
-			result = fmt.Sprintf("request served = %d\n", reqNum)
-		} else if typeStr == "4" {
-
-		}
-		conn.Write([]byte(result))
-		reqNum++
+		//var result string = ""
+		//if typeStr == "1" {
+		//	count, _ := conn.Read(buffer)
+		//	result = string(bytes.ToUpper(buffer[:count]))
+		//} else if typeStr == "2" {
+		//	addrs := strings.Split(conn.RemoteAddr().String(), ":")
+		//	result = fmt.Sprintf("client IP = %s, port = %s\n", addrs[0], addrs[1])
+		//} else if typeStr == "3" {
+		//	result = fmt.Sprintf("request served = %d\n", reqNum)
+		//} else if typeStr == "4" {
+		//
+		//}
+		//conn.Write([]byte(result))
 	}
 }

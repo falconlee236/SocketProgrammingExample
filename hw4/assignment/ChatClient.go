@@ -12,9 +12,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"strconv"
 	"strings"
-	"time"
 )
 
 func main() {
@@ -25,16 +23,14 @@ func main() {
 	}
 	// get nickname from system args
 	nickname := os.Args[1]
-
-	// signal channel
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		for range c {
-			fmt.Print("\nBye bye~\n")
-			os.Exit(1)
-		}
-	}()
+	//define command map
+	commandMap := map[string]byte{
+		"ls":     0x01,
+		"secret": 0x02,
+		"except": 0x03,
+		"ping":   0x04,
+		"quit":   0x05,
+	}
 	// server info
 	serverName := "127.0.0.1"
 	serverPort := "20532"
@@ -52,51 +48,61 @@ func main() {
 	accessResBuffer := make([]byte, 1024)
 	cnt, _ := conn.Read(accessResBuffer)
 	accessRes := strings.SplitN(string(accessResBuffer[:cnt]), "\n", 2)
-	fmt.Print(accessRes[1])
+	fmt.Println(accessRes[1])
 	if accessRes[0] == "404" {
 		return
 	}
 
-	for {
-		fmt.Printf("<Menu>\n")
-		fmt.Printf("1) convert text to UPPER-case\n")
-		fmt.Printf("2) get my IP address and port number\n")
-		fmt.Printf("3) get server request count\n")
-		fmt.Printf("4) get server running time\n")
-		fmt.Printf("5) exit\n")
-		// input option string
-		fmt.Printf("Input option: ")
-		inputOption, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-		inputNum, _ := strconv.Atoi(strings.TrimRight(inputOption, "\n"))
-		// not number error handling
-		if inputNum < 1 || inputNum > 5 {
-			fmt.Print("Invalid option\n")
-			continue
+	// signal channel
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func(conn net.Conn) {
+		for range c {
+			conn.Write([]byte{commandMap["quit"]})
+			fmt.Print("\nBye bye~\n")
+			os.Exit(1)
 		}
-		// start calculate RTT
-		start := time.Now()
-		// send to Server
-		conn.Write([]byte(inputOption))
+	}(conn)
 
-		if strings.TrimRight(inputOption, "\n") == "1" {
-			fmt.Printf("Input lowercase sentence: ")
-			input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-			start = time.Now()
-			conn.Write([]byte(input))
-		} else if strings.TrimRight(inputOption, "\n") == "5" {
-			fmt.Printf("Bye bye~")
-			return
+	for {
+		msgInput, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+		commandIdx := strings.IndexByte(msgInput, '\\')
+		// start calculate RTT
+		//start := time.Now()
+		if commandIdx == 0 {
+			commandMsg := strings.TrimRight(msgInput[1:], "\n")
+			fmt.Println("Command:", commandMsg)
+			byteValue, isExist := commandMap[commandMsg]
+			if !isExist {
+				fmt.Println("invalid command")
+				continue
+			}
+			fmt.Println(byteValue)
+			conn.Write([]byte{byteValue})
+		} else {
+			//start = time.Now()
+			conn.Write([]byte(msgInput))
 		}
-		// read from server
-		buffer := make([]byte, 1024)
-		read, err := conn.Read(buffer)
-		duration := time.Since(start)
-		if err != nil || read == 0 {
-			log.Fatalf("Failed to connect to server: %v", err)
-			return
-		}
-		// return microsecond
-		fmt.Printf("\nReply from server: %s", string(buffer))
-		fmt.Printf("RTT = %fms\n", float64(duration.Nanoseconds())/1e+6)
+
+		//if strings.TrimRight(msgInput, "\n") == "1" {
+		//	fmt.Printf("Input lowercase sentence: ")
+		//	input, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+		//	start = time.Now()
+		//	conn.Write([]byte(input))
+		//} else if strings.TrimRight(msgInput, "\n") == "5" {
+		//	fmt.Printf("Bye bye~")
+		//	return
+		//}
+		//// read from server
+		//buffer := make([]byte, 1024)
+		//read, err := conn.Read(buffer)
+		//duration := time.Since(start)
+		//if err != nil || read == 0 {
+		//	log.Fatalf("Failed to connect to server: %v", err)
+		//	return
+		//}
+		//// return microsecond
+		//fmt.Printf("\nReply from server: %s", string(buffer))
+		//fmt.Printf("RTT = %fms\n", float64(duration.Nanoseconds())/1e+6)
 	}
 }
