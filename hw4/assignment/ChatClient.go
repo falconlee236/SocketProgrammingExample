@@ -13,7 +13,10 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"time"
 )
+
+var currentTime time.Time
 
 func main() {
 	// system args handling
@@ -80,14 +83,20 @@ func main() {
 			buffer := make([]byte, 1024)
 			read, err := conn.Read(buffer)
 			if err != nil || read == 0 {
-				return
+				fmt.Print("\ngg~\n")
+				os.Exit(1)
 			}
-			fmt.Println(string(buffer[:read]))
+			// if server send ping command again
+			if read == 1 || buffer[0] == commandMap["ping"] {
+				duration := time.Since(currentTime)
+				// return microsecond
+				fmt.Printf("RTT = %fms\n", float64(duration.Nanoseconds())/1e+6)
+			} else {
+				fmt.Println(string(buffer[:read]))
+			}
 		}
 	}(conn)
 
-	// start calculate RTT
-	//start := time.Now()
 	for {
 		// input msg from user
 		msgInput, _ := bufio.NewReader(os.Stdin).ReadString('\n')
@@ -102,12 +111,13 @@ func main() {
 			if !isExist {
 				fmt.Println("Invalid command")
 			}
+			// start calculate start time
+			currentTime = time.Now()
 			_, err := conn.Write([]byte{byteValue})
 			if err != nil {
 				log.Fatalf("Failed to connect to server\n%v", err)
 			}
 		} else {
-			//start = time.Now()
 			_, err := conn.Write([]byte(msgInput))
 			if err != nil {
 				log.Fatalf("Failed to connect to server\n%v", err)
@@ -124,8 +134,5 @@ func main() {
 		//	return
 		//}
 		//duration := time.Since(start)
-		//// return microsecond
-		//fmt.Printf("\nReply from server: %s", string(buffer))
-		//fmt.Printf("RTT = %fms\n", float64(duration.Nanoseconds())/1e+6)
 	}
 }

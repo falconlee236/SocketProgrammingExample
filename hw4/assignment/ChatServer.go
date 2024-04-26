@@ -18,7 +18,7 @@ func main() {
 	signal.Notify(c, os.Interrupt)
 	go func() {
 		for range c {
-			fmt.Print("\nBye bye~\n")
+			fmt.Print("\ngg~\n")
 			os.Exit(1)
 		}
 	}()
@@ -96,7 +96,9 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 			command := msgRes[t-1]
 			// if command is invalid
 			if command == 0 {
-				fmt.Println("Invalid command received from server")
+				fmt.Println("Invalid command received from client")
+			} else if command == 4 {
+				conn.Write(msgRes[:t])
 			} else if command == 5 {
 				sendMsg := fmt.Sprintf("[%s left the room.]\n[There are %d users now.]\n\n", nicknameStr, *totalClientNum-1)
 				for nickname, otherConn := range *clientMap {
