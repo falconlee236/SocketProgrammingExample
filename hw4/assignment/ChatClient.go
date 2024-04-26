@@ -38,19 +38,26 @@ func main() {
 	// connect to server
 	conn, err := net.Dial("tcp", serverName+":"+serverPort)
 	if err != nil {
-		log.Fatalf("Failed to connect to server: %v", err)
-		return
+		log.Fatalf("Failed to connect to server\n%v", err)
 	}
-	defer conn.Close()
+	defer func(conn net.Conn) {
+		err := conn.Close()
+		if err != nil {
+			log.Fatalf("Failed to connect to server\n%v", err)
+		}
+	}(conn)
 
 	// send nickname to server
-	conn.Write([]byte(nickname))
+	_, err = conn.Write([]byte(nickname))
+	if err != nil {
+		log.Fatalf("Failed to connect to server\n%v", err)
+	}
 	accessResBuffer := make([]byte, 1024)
 	cnt, _ := conn.Read(accessResBuffer)
 	accessRes := strings.SplitN(string(accessResBuffer[:cnt]), "\n", 2)
 	fmt.Println(accessRes[1])
 	if accessRes[0] == "404" {
-		return
+		os.Exit(1)
 	}
 
 	// signal channel
@@ -58,7 +65,10 @@ func main() {
 	signal.Notify(c, os.Interrupt)
 	go func(conn net.Conn) {
 		<-c
-		conn.Write([]byte{commandMap["quit"]})
+		_, err := conn.Write([]byte{commandMap["quit"]})
+		if err != nil {
+			log.Fatalf("Failed to connect to server\n%v", err)
+		}
 		fmt.Print("\ngg~\n")
 		os.Exit(1)
 	}(conn)
@@ -73,14 +83,18 @@ func main() {
 			fmt.Println("Command:", commandMsg)
 			byteValue, isExist := commandMap[commandMsg]
 			if !isExist {
-				fmt.Println("invalid command")
-				continue
+				log.Fatalf("Failed to connect to server\n%v", err)
 			}
-			fmt.Println(byteValue)
-			conn.Write([]byte{byteValue})
+			_, err := conn.Write([]byte{byteValue})
+			if err != nil {
+				log.Fatalf("Failed to connect to server\n%v", err)
+			}
 		} else {
 			//start = time.Now()
-			conn.Write([]byte(msgInput))
+			_, err := conn.Write([]byte(msgInput))
+			if err != nil {
+				log.Fatalf("Failed to connect to server\n%v", err)
+			}
 		}
 
 		//if strings.TrimRight(msgInput, "\n") == "1" {
