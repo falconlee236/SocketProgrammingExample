@@ -36,7 +36,7 @@ func main() {
 		}
 	}()
 	// server info
-	serverName := "localhost"
+	serverName := "127.0.0.1"
 	serverPort := "20532"
 
 	// connect to server
