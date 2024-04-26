@@ -57,8 +57,11 @@ func main() {
 	}
 	accessResBuffer := make([]byte, 1024)
 	cnt, _ := conn.Read(accessResBuffer)
+
+	// remove res status and msg
 	accessRes := strings.SplitN(string(accessResBuffer[:cnt]), "\n", 2)
 	fmt.Println(accessRes[1])
+	// if status is error
 	if accessRes[0] == "404" {
 		os.Exit(1)
 	}
@@ -91,7 +94,7 @@ func main() {
 				duration := time.Since(currentTime)
 				// return microsecond
 				fmt.Printf("RTT = %fms\n", float64(duration.Nanoseconds())/1e+6)
-			} else {
+			} else { // else msg, print msg to client
 				fmt.Println(string(buffer[:read]))
 			}
 		}

@@ -97,6 +97,13 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 			// if command is invalid
 			if command == 0 {
 				fmt.Println("Invalid command received from client")
+			} else if command == 1 {
+				sendMsg := ""
+				for nickname, otherConn := range *clientMap {
+					ip, port, _ := net.SplitHostPort(otherConn.RemoteAddr().String())
+					sendMsg += fmt.Sprintf("<%s, %s, %s>\n", nickname, ip, port)
+				}
+				conn.Write([]byte(sendMsg))
 			} else if command == 4 {
 				conn.Write(msgRes[:t])
 			} else if command == 5 {
