@@ -52,10 +52,11 @@ func main() {
 		_, isExist := clientMap[nicknameStr]
 		var nicknameRes string = ""
 		var nicknameStatusCode int = 200
-		if len(clientMap) == 8 {
+		if totalClientNum == 8 {
 			nicknameStatusCode = 404
 			nicknameRes = fmt.Sprintf("%d\nchatting room full. cannot connect\n", nicknameStatusCode)
 		} else if isExist {
+			nicknameStatusCode = 404
 			nicknameRes = fmt.Sprintf("%d\nnickname already used by another user. cannot connect\n", nicknameStatusCode)
 		} else {
 			clientMap[nicknameStr] = conn
@@ -66,18 +67,21 @@ func main() {
 		conn.Write([]byte(nicknameRes))
 		// start client handling
 		if nicknameStatusCode == 200 {
-			go TCPClientHandler(conn, &totalClientNum)
+			go TCPClientHandler(conn, &totalClientNum, &clientMap, nicknameStr)
 		}
 	}
 }
 
-func TCPClientHandler(conn net.Conn, totalClientNum *int) {
-	defer conn.Close() //multiple defer function Last in First out
+func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]net.Conn, nicknameStr string) {
+	//multiple defer function Last in First out
+	defer conn.Close()
 	// if client request closed, that function called
-	defer func(totalClientNum *int) {
+	defer func(totalClientNum *int, clientMap *map[string]net.Conn, nicknameStr string) {
 		// subtract total client number
 		*totalClientNum -= 1
-	}(totalClientNum)
+		// remove client info
+		delete(*clientMap, nicknameStr)
+	}(totalClientNum, clientMap, nicknameStr)
 
 	typeBuffer := make([]byte, 1024)
 	reqNum := 0
