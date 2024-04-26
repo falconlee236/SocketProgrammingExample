@@ -59,7 +59,7 @@ func main() {
 	go func(conn net.Conn) {
 		for range c {
 			conn.Write([]byte{commandMap["quit"]})
-			fmt.Print("\nBye bye~\n")
+			fmt.Print("\ngg~\n")
 			os.Exit(1)
 		}
 	}(conn)

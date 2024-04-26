@@ -91,8 +91,11 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 		msgRes := make([]byte, 1024)
 		t, _ := conn.Read(msgRes)
 		if t == 1 {
-			fmt.Println(t)
-			fmt.Println(string(msgRes[:t]))
+			command := msgRes[t-1]
+			if command == 5 {
+				fmt.Println("!!!")
+				return
+			}
 		} else {
 			msg := string(msgRes[:t-1])
 			fmt.Println(msg)
