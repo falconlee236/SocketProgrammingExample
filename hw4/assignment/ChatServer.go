@@ -70,7 +70,7 @@ func main() {
 		// start client handling
 		if nicknameStatusCode == 200 {
 			fmt.Printf("[%s has joined from %s.]\n"+
-				"[There are %d users in room.]\n", nicknameStr, conn.RemoteAddr().String(), totalClientNum)
+				"[There are %d users in room.]\n\n", nicknameStr, conn.RemoteAddr().String(), totalClientNum)
 			go TCPClientHandler(conn, &totalClientNum, &clientMap, nicknameStr)
 		}
 	}
@@ -93,7 +93,14 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 		if t == 1 {
 			command := msgRes[t-1]
 			if command == 5 {
-				fmt.Println("!!!")
+				sendMsg := fmt.Sprintf("[%s left the room.]\n[There are %d users now.]\n\n", nicknameStr, *totalClientNum-1)
+				for nickname, otherConn := range *clientMap {
+					if nickname == nicknameStr {
+						continue
+					}
+					otherConn.Write([]byte(sendMsg))
+				}
+				fmt.Printf(sendMsg)
 				return
 			}
 		} else {
