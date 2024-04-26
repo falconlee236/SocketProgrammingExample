@@ -86,18 +86,21 @@ func main() {
 		}
 	}(conn)
 
+	// start calculate RTT
+	//start := time.Now()
 	for {
+		// input msg from user
 		msgInput, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+		// find command index
 		commandIdx := strings.IndexByte(msgInput, '\\')
-		// start calculate RTT
-		//start := time.Now()
+		// if command
 		if commandIdx == 0 {
 			commandMsg := strings.TrimRight(msgInput[1:], "\n")
-			fmt.Println("Command:", commandMsg)
+			// encoding command to 1byte
 			byteValue, isExist := commandMap[commandMsg]
+			// cannot find in command table
 			if !isExist {
-				fmt.Println("Invalid command:")
-				continue
+				fmt.Println("Invalid command")
 			}
 			_, err := conn.Write([]byte{byteValue})
 			if err != nil {

@@ -94,7 +94,10 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 		// if that message is command
 		if t == 1 {
 			command := msgRes[t-1]
-			if command == 5 {
+			// if command is invalid
+			if command == 0 {
+				fmt.Println("Invalid command received from server")
+			} else if command == 5 {
 				sendMsg := fmt.Sprintf("[%s left the room.]\n[There are %d users now.]\n\n", nicknameStr, *totalClientNum-1)
 				for nickname, otherConn := range *clientMap {
 					if nickname == nicknameStr {
