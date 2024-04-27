@@ -14,16 +14,17 @@
 #include <time.h> //localtime
 #include <signal.h> //signal
 #include <ctype.h> //islower, toupper
+#include "map.h"
 
 #define BUFFER_SIZE 100 // Max Buffer size
+#define NICkNAME_SIZE 40 // nickname size
 #define PORT 30532 // Server port number
-#define MAX_CLIENT 100 // Max client number
+#define MAX_CLIENT 8 // Max client number
 #define SEC(t) ((t).tv_sec + (t).tv_nsec / 1e+9) // second to millisecond
 
 typedef struct s_clientInfo{
     char* ip; //client ip
     int port; //client port
-    int num; // client id
 }client_info;
 
 // print current connect information
@@ -74,13 +75,22 @@ int main(void){
         perror("listen error");
         exit(1);
     }
+    struct sockaddr_in local_addr;
+    socklen_t addr_len = sizeof(local_addr);
+    if (getsockname(serv_sock, (struct sockaddr*)&local_addr, &addr_len) == -1) {
+        perror("getsockname error");
+        exit(1);
+    }
+    char* server_ip = inet_ntoa(local_addr.sin_addr);
     printf("Server is ready to receive on port %d\n", PORT);
 
     fd_set reads, temps;
     FD_ZERO(&reads); // fd_set init
     FD_SET(serv_sock, &reads); // assign server fd to reads fd set
     int fd_max = serv_sock; // assign server socket to max, client request fd is always after this fd_max.
-    int client_id = 0;
+
+    // create clientMap
+    Map* client_map = createMap(MAX_CLIENT);
 
     while(1){
         struct timeval timeout;
@@ -97,81 +107,77 @@ int main(void){
                 if(fd == serv_sock){ // client request to server connecting case
                     struct sockaddr_in clnt_addr;
                     socklen_t clnt_len = sizeof(clnt_addr);
-                    // connect that client
+                    // accept client's connection
                     int clnt_sock = accept(serv_sock, (struct sockaddr *)&clnt_addr, &clnt_len);
-                    char *client_ip = inet_ntoa(clnt_addr.sin_addr);
-                    int client_port = ntohs(clnt_addr.sin_port);
-                    printf("Connection request from %s:%d\n", client_ip, client_port);
-                    // get next client number
-                    client_arr[clnt_sock].num = ++client_id;
-                    client_arr[clnt_sock].ip = client_ip;
-                    client_arr[clnt_sock].port = client_port;
-                    total_client_num++;
-                    print_connect_status(client_arr[clnt_sock].num, total_client_num, 1);
 
-                    FD_SET(clnt_sock, &reads); // set that client fd to 1
-                    if(fd_max < clnt_sock){ // set max fd to that client fd
-                        fd_max = clnt_sock;
+                    // check nickname
+                    char nickname_buffer[NICkNAME_SIZE] = {0, }, nickname_res_buffer[BUFFER_SIZE] = {0, };
+                    int status_code = 200;
+                    read(clnt_sock, nickname_buffer, NICkNAME_SIZE); // name\0, len = 4
+                    if (total_client_num == 8){
+                        status_code = 404;
+                        sprintf(nickname_res_buffer, "%d\n[chatting room full. cannot connect.]\n", status_code);
+                    } else if (find(client_map, nickname_buffer) != -1){
+                        status_code = 404;
+                        sprintf(nickname_res_buffer, "%d\n[nickname already used by another user. cannot connect.]\n", status_code);
+                    } else {
+                        insert(client_map, nickname_buffer, clnt_sock);
+                        char *client_ip = inet_ntoa(clnt_addr.sin_addr);
+                        int client_port = ntohs(clnt_addr.sin_port);
+                        // get next client number
+                        client_arr[clnt_sock].ip = client_ip;
+                        client_arr[clnt_sock].port = client_port;
+                        total_client_num++;
+                        FD_SET(clnt_sock, &reads); // set that client fd to 1
+                        if(fd_max < clnt_sock){ // set max fd to that client fd
+                            fd_max = clnt_sock;
+                        }
+                        sprintf(nickname_res_buffer, "%d\n[welcome %s to CAU net-class chat room at %s:%d.]\n"
+                                                     "[There are %d users in the room.]\n",
+                                                     status_code, nickname_buffer, server_ip, PORT, total_client_num);
+                        printf("[%s has joined from %s:%d.]\n"
+                               "[There are %d users in room.]\n\n", nickname_buffer, client_ip, client_port, total_client_num);
                     }
+                    write(clnt_sock, nickname_res_buffer, strlen(nickname_res_buffer));
                 } else{ // already connected client
-                    char type_str[BUFFER_SIZE];
-                    int str_len = read(fd, type_str, BUFFER_SIZE);
+                    char nicknameBuffer[NICkNAME_SIZE];
+                    memset(&nicknameBuffer, 0, sizeof (nicknameBuffer));
+                    ssize_t str_len = read(fd, nicknameBuffer, NICkNAME_SIZE);
                     if(str_len == 0){ // disconnect request
                         FD_CLR(fd, &reads); //change that fd to 0
                         close(fd);
                         total_client_num--;
-                        print_connect_status(client_arr[fd].num, total_client_num, 0);
                     } else {
-                        type_str[str_len] = '\0';
-                        printf("Command %s", type_str);
-
-                        char res[BUFFER_SIZE * 5] = {0, };
-                        if (strncmp(type_str, "1\n", str_len) == 0){
-                            char text[BUFFER_SIZE];
-                            str_len = read(fd, text, BUFFER_SIZE);
-                            for(int i = 0; i < str_len; i++){
-                                if (islower(text[i])) res[i] = toupper(text[i]);
-                                else res[i] = text[i];
-                            }
-                        } else if (strncmp(type_str, "2\n", str_len) == 0){
-                            sprintf(res, "client IP = %s, port = %d\n", client_arr[fd].ip, client_arr[fd].port);
-                        } else if (strncmp(type_str, "3\n", str_len) == 0){
-                            sprintf(res, "request served %d=\n",1);
-                        } else if (strncmp(type_str, "4\n", str_len) == 0){
-                            struct timespec cur_time;
-                            clock_gettime(CLOCK_MONOTONIC, &cur_time);
-                            long duration = SEC(cur_time) - SEC(server_start);
-                            int hours = duration / 3600;
-                            int minutes = (hours % 3600) / 60;
-                            int seconds = duration % 60;
-                            sprintf(res, "run time = %02d:%02d:%02d\n", hours, minutes, seconds);
-                        }
-                        // send to client
-                        write(fd, res, strlen(res));
+//                        type_str[str_len] = '\0';
+//                        printf("Command %s", type_str);
+//
+//                        char res[BUFFER_SIZE * 5] = {0, };
+//                        if (strncmp(type_str, "1\n", str_len) == 0){
+//                            char text[BUFFER_SIZE];
+//                            str_len = read(fd, text, BUFFER_SIZE);
+//                            for(int i = 0; i < str_len; i++){
+//                                if (islower(text[i])) res[i] = toupper(text[i]);
+//                                else res[i] = text[i];
+//                            }
+//                        } else if (strncmp(type_str, "2\n", str_len) == 0){
+//                            sprintf(res, "client IP = %s, port = %d\n", client_arr[fd].ip, client_arr[fd].port);
+//                        } else if (strncmp(type_str, "3\n", str_len) == 0){
+//                            sprintf(res, "request served %d=\n",1);
+//                        } else if (strncmp(type_str, "4\n", str_len) == 0){
+//                            struct timespec cur_time;
+//                            clock_gettime(CLOCK_MONOTONIC, &cur_time);
+//                            long duration = SEC(cur_time) - SEC(server_start);
+//                            int hours = duration / 3600;
+//                            int minutes = (hours % 3600) / 60;
+//                            int seconds = duration % 60;
+//                            sprintf(res, "run time = %02d:%02d:%02d\n", hours, minutes, seconds);
+//                        }
+//                        // send to client
+//                        write(fd, res, strlen(res));
                     }
                 }
             }
         }
-    }
-}
-
-void print_connect_status(int client_num, int total_client_num, int is_connected){
-    time_t raw_time;
-    struct tm *time_info;
-    char time_str[9];
-
-    // calculate current time
-    time(&raw_time);
-    time_info = localtime(&raw_time);
-
-    strftime(time_str, sizeof(time_str), "%H:%M:%S", time_info);
-    if (is_connected){
-        printf("[Time: %s] Client %d connected. Number of clients connected = %d\n",
-               time_str, client_num, total_client_num);
-    } else {
-        printf("[Time: %s] Client %d disconnected. Number of clients connected = %d\n",
-               time_str, client_num, total_client_num);
-
     }
 }
 

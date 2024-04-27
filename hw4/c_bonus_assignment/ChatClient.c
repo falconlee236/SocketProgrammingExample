@@ -79,19 +79,21 @@ int main(int ac, char **av){
         perror("Failed to connect to server\n");
         exit(EXIT_FAILURE);
     }
+    // receive nickname response
     if (read(client_socket, buffer, BUFFER_SIZE) == -1){
         perror("Failed to connect to server\n");
         exit(EXIT_FAILURE);
     }
-    while (1){
-
-        fgets(buffer, sizeof (buffer), stdin);
-        write(client_socket, buffer, BUFFER_SIZE);
-        printf("you enter %s\n", buffer);
-        memset(&buffer, 0, sizeof (buffer));
-        read(client_socket, buffer, BUFFER_SIZE);
-        printf("you received %s\n", buffer);
-    }
+    printf("%s\n", buffer);
+//    while (1){
+//
+//        fgets(buffer, sizeof (buffer), stdin);
+//        write(client_socket, buffer, BUFFER_SIZE);
+//        printf("you enter %s\n", buffer);
+//        memset(&buffer, 0, sizeof (buffer));
+//        read(client_socket, buffer, BUFFER_SIZE);
+//        printf("you received %s\n", buffer);
+//    }
 
 
 
