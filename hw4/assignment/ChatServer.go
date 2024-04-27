@@ -96,7 +96,7 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 			return
 		}
 
-		// if that message is ls, ping, quit command or invalid command
+		// if that message is ls, ping, quit command or invalid command or single command
 		if t == 1 {
 			command := msgRes[t-1]
 			// if command is invalid
@@ -133,13 +133,19 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 				// finish client
 				return
 			}
-		} else if msgRes[0] == 0 { // invalid command, within space in msg
+		} else if msgRes[0] == 0 || ((msgRes[0] == 1 || msgRes[0] == 4 || msgRes[0] == 5) && t != 1) { // invalid command, within space in msg
 			fmt.Println("Invalid command: " + string(msgRes[1:]))
 		} else if msgRes[0] == 2 || msgRes[0] == 3 { // valid command, command secret, except
 			msgArr := strings.SplitN(string(msgRes[1:t]), " ", 2)
+			var commandStr string = ""
+			if msgRes[0] == 2 {
+				commandStr = "\\secret"
+			} else {
+				commandStr = "\\except"
+			}
 			// command parameter error
 			if len(msgArr) != 2 {
-				fmt.Println("Invalid command: " + string(msgRes[1:]))
+				fmt.Printf("Invalid command: %s %s\n", commandStr, string(msgRes[1:]))
 				continue
 			}
 			// split nickname, msg
@@ -160,7 +166,7 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 				secretConn, isExist := (*clientMap)[commandNickname]
 				// if that nickname does not exist in map
 				if !isExist {
-					fmt.Println("Invalid command: " + string(msgRes[1:]))
+					fmt.Println("Invalid command: \\secret " + string(msgRes[1:]))
 					continue
 				}
 				sendMsg := fmt.Sprintf("from: %s> %s\n", nicknameStr, commandMsg)
