@@ -141,9 +141,10 @@ int main(void){
                     }
                     write(clnt_sock, nickname_res_buffer, strlen(nickname_res_buffer));
                 } else{ // already connected client
-                    char buffer[BUFFER_SIZE];
+                    char buffer[BUFFER_SIZE] = {0, };
                     memset(&buffer, 0, sizeof (buffer));
-                    ssize_t str_len = read(fd, buffer, NICkNAME_SIZE);
+                    ssize_t str_len = read(fd, buffer, BUFFER_SIZE);
+                    printf("1----%s   ==== %d %ld\n", buffer, fd, str_len);
                     if(str_len == 0){ // disconnect request
                         FD_CLR(fd, &reads); //change that fd to 0
                         close(fd);
