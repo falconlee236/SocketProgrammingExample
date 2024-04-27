@@ -16,7 +16,7 @@
 #include <ctype.h> //islower, toupper
 
 #define BUFFER_SIZE 100 // Max Buffer size
-#define PORT 20532 // Server port number
+#define PORT 30532 // Server port number
 #define MAX_CLIENT 100 // Max client number
 #define SEC(t) ((t).tv_sec + (t).tv_nsec / 1e+9) // second to millisecond
 
