@@ -95,6 +95,7 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 		if t == 0 {
 			return
 		}
+
 		// if that message is ls, ping, quit command or invalid command
 		if t == 1 {
 			command := msgRes[t-1]
@@ -111,6 +112,10 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 					sendMsg += fmt.Sprintf("<%s, %s, %s>\n", nickname, ip, port)
 				}
 				conn.Write([]byte(sendMsg))
+			} else if command == 2 {
+				fmt.Println("Invalid command: \\secret")
+			} else if command == 3 {
+				fmt.Println("Invalid command: \\except")
 			} else if command == 4 { // ping command
 				// return ping byte back
 				conn.Write(msgRes[:t])
