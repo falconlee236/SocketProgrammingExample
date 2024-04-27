@@ -4,11 +4,11 @@
 CC = gcc
 
 NAME_CLIENT = ChatClient
-SRCS_CLIENT = ChatClient.c
+SRCS_CLIENT = ChatClient.c map.c
 OBJS_CLIENT = $(SRCS_CLIENT:.c=.o)
 
 NAME_SERVER = ChatServer
-SRCS_SERVER = ChatServer.c
+SRCS_SERVER = ChatServer.c map.c
 OBJS_SERVER = $(SRCS_SERVER:.c=.o)
 
 all: $(NAME_CLIENT) $(NAME_SERVER)

@@ -13,7 +13,6 @@
 #include <arpa/inet.h> // inet_ntoa
 #include <time.h> //localtime
 #include <signal.h> //signal
-#include <pthread.h> //pthread_create
 #include <ctype.h> //islower, toupper
 
 #define BUFFER_SIZE 100 // Max Buffer size
@@ -29,8 +28,6 @@ typedef struct s_clientInfo{
 
 // print current connect information
 void print_connect_status(int client_num, int total_client_num, int is_connected);
-// print current connect client number using server
-void* print_server_status(void* arg);
 // sigInt handler
 void sigint_handler(int signum);
 
@@ -38,7 +35,6 @@ void sigint_handler(int signum);
 int serv_sock;
 
 int main(void){
-    int total_req_num = 0;
     //server start time
     struct timespec server_start;
     clock_gettime(CLOCK_MONOTONIC, &server_start);
@@ -46,13 +42,8 @@ int main(void){
     //signal
     signal(SIGINT, sigint_handler);
 
-    //create thread to check 10 second
+    //total client number variable
     int total_client_num = 0;
-    pthread_t print_thread;
-    if (pthread_create(&print_thread, NULL, print_server_status, &total_client_num) != 0){
-        perror("pthread create error");
-        exit(1);
-    }
 
     // client info array init
     client_info client_arr[MAX_CLIENT + 3];
@@ -145,7 +136,7 @@ int main(void){
                         } else if (strncmp(type_str, "2\n", str_len) == 0){
                             sprintf(res, "client IP = %s, port = %d\n", client_arr[fd].ip, client_arr[fd].port);
                         } else if (strncmp(type_str, "3\n", str_len) == 0){
-                            sprintf(res, "request served = %d\n", total_req_num);
+                            sprintf(res, "request served %d=\n",1);
                         } else if (strncmp(type_str, "4\n", str_len) == 0){
                             struct timespec cur_time;
                             clock_gettime(CLOCK_MONOTONIC, &cur_time);
@@ -157,7 +148,6 @@ int main(void){
                         }
                         // send to client
                         write(fd, res, strlen(res));
-                        total_req_num++;
                     }
                 }
             }
@@ -191,22 +181,3 @@ void sigint_handler(int signum){
     if (serv_sock > 0) close(serv_sock);
     exit(signum);
 }
-
-void* print_server_status(void* arg){
-    while (1){
-        sleep(10);
-
-        time_t raw_time;
-        struct tm *time_info;
-        char time_str[9];
-
-        time(&raw_time);
-        time_info = localtime(&raw_time);
-
-        strftime(time_str, sizeof(time_str), "%H:%M:%S", time_info);
-
-        int* client_num = (int*)arg;
-        printf("[Time: %s] Number of clients connected = %d\n", time_str, *client_num);
-    }
-}
-
