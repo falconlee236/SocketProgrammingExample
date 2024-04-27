@@ -85,15 +85,15 @@ int main(int ac, char **av){
         exit(EXIT_FAILURE);
     }
     printf("%s\n", buffer);
-//    while (1){
-//
-//        fgets(buffer, sizeof (buffer), stdin);
-//        write(client_socket, buffer, BUFFER_SIZE);
-//        printf("you enter %s\n", buffer);
-//        memset(&buffer, 0, sizeof (buffer));
-//        read(client_socket, buffer, BUFFER_SIZE);
-//        printf("you received %s\n", buffer);
-//    }
+    while (1){
+        memset(&buffer, 0, sizeof (buffer));
+        fgets(buffer, sizeof (buffer), stdin);
+        write(client_socket, buffer, BUFFER_SIZE);
+        printf("you enter %s\n", buffer);
+        memset(&buffer, 0, sizeof (buffer));
+        read(client_socket, buffer, BUFFER_SIZE);
+        printf("you received %s\n", buffer);
+    }
 
 
 

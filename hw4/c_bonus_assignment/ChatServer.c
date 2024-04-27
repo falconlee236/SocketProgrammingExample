@@ -16,7 +16,7 @@
 #include <ctype.h> //islower, toupper
 #include "map.h"
 
-#define BUFFER_SIZE 100 // Max Buffer size
+#define BUFFER_SIZE 1024 // Max Buffer size
 #define NICkNAME_SIZE 40 // nickname size
 #define PORT 30532 // Server port number
 #define MAX_CLIENT 8 // Max client number
@@ -132,22 +132,25 @@ int main(void){
                         if(fd_max < clnt_sock){ // set max fd to that client fd
                             fd_max = clnt_sock;
                         }
-                        sprintf(nickname_res_buffer, "%d\n[welcome %s to CAU net-class chat room at %s:%d.]\n"
-                                                     "[There are %d users in the room.]\n",
+                        printf("%d\n[welcome %s to CAU net-class chat room at %s:%d.]\n[There are %d users in the room.]\n",
+                               status_code, nickname_buffer, server_ip, PORT, total_client_num);
+                        sprintf(nickname_res_buffer, "%d\n[welcome %s to CAU net-class chat room at %s:%d.]\n[There are %d users in the room.]\n",
                                                      status_code, nickname_buffer, server_ip, PORT, total_client_num);
                         printf("[%s has joined from %s:%d.]\n"
                                "[There are %d users in room.]\n\n", nickname_buffer, client_ip, client_port, total_client_num);
                     }
                     write(clnt_sock, nickname_res_buffer, strlen(nickname_res_buffer));
                 } else{ // already connected client
-                    char nicknameBuffer[NICkNAME_SIZE];
-                    memset(&nicknameBuffer, 0, sizeof (nicknameBuffer));
-                    ssize_t str_len = read(fd, nicknameBuffer, NICkNAME_SIZE);
+                    char buffer[BUFFER_SIZE];
+                    memset(&buffer, 0, sizeof (buffer));
+                    ssize_t str_len = read(fd, buffer, NICkNAME_SIZE);
                     if(str_len == 0){ // disconnect request
                         FD_CLR(fd, &reads); //change that fd to 0
                         close(fd);
                         total_client_num--;
                     } else {
+                        printf("received %s\n", buffer);
+                        write(fd, buffer, sizeof(buffer));
 //                        type_str[str_len] = '\0';
 //                        printf("Command %s", type_str);
 //
