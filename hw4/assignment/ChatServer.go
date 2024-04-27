@@ -151,6 +151,7 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 			// split nickname, msg
 			commandNickname := msgArr[0]
 			commandMsg := msgArr[1]
+			// check filtering message in secret or except command message
 			if strings.Contains(strings.ToLower(commandMsg), strings.ToLower("I hate professor")) {
 				sendMsg := fmt.Sprintf("[%s is disconnected.]\n"+
 					"[There are %d users in the chat room.]\n", nicknameStr, *totalClientNum-1)
@@ -183,6 +184,7 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 			}
 		} else { // otherwise
 			msg := string(msgRes[:t-1])
+			// check filtering message in message
 			if strings.Contains(strings.ToLower(msg), strings.ToLower("I hate professor")) {
 				sendMsg := fmt.Sprintf("[%s is disconnected.]\n"+
 					"[There are %d users in the chat room.]\n", nicknameStr, *totalClientNum-1)
