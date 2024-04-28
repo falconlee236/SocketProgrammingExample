@@ -29,7 +29,10 @@ typedef struct s_clientInfo{
 
 // sigInt handler
 void sigint_handler(int signum);
+// convert string to lowercase
 char* to_lower(char *str);
+// clang version splitN function
+char **splitN(char *str, const char *delim, int n);
 
 // global server socket, using close fd when sigint occur
 int serv_sock;
@@ -173,6 +176,10 @@ int main(void){
                                             client_arr[other_fd].nickname, client_arr[other_fd].ip, client_arr[other_fd].port);
                                     strcat(sendMsg, client_info);
                                 }
+                            } else if (command_type == 2) {
+
+                            } else if (command_type == 3) {
+
                             } else if (command_type == 4){
                                 sendMsg[0] = (char)command_type;
                             }
@@ -228,4 +235,31 @@ char* to_lower(char *str){
     }
     res[i] = 0;
     return res;
+}
+
+// clang version splitN function
+char **splitN(char *str, const char *delim, int n) {
+    // pointer array allocated
+    char **tokens = (char **)malloc(sizeof(char *) * (n+1));
+    if (tokens == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+    char *token;
+    int count = 0;
+    // get first token
+    token = strtok(str, delim);
+    // save token to array
+    tokens[count++] = token;
+    // loop string end, n times
+    while (token != NULL && count < n) {
+        // get next token
+        token = strtok(NULL, delim);
+        // save token to array
+        tokens[count++] = token;
+    }
+    // add null pointer, that is end of array
+    tokens[count] = NULL;
+    // return token array
+    return tokens;
 }
