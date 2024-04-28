@@ -49,7 +49,7 @@ void delete(Map *map, char *key) {
 }
 
 // get element
-int find(Map *map, char *key) {
+char find(Map *map, char *key) {
     for (int i = 0; i < map->size; i++) {
         if (strcmp(map->data[i].key, key) == 0) {
             return map->data[i].value;

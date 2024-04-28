@@ -30,7 +30,7 @@ void insert(Map *map, char *key, int value);
 // delete function
 void delete(Map *map, char *key);
 // get element
-int find(Map *map, char *key);
+char find(Map *map, char *key);
 // return map size
 int size(Map *map);
 // free map function
