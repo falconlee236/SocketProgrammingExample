@@ -134,8 +134,6 @@ int main(void){
                         if(fd_max < clnt_sock){ // set max fd to that client fd
                             fd_max = clnt_sock;
                         }
-                        printf("%d\n[welcome %s to CAU net-class chat room at %s:%d.]\n[There are %d users in the room.]\n",
-                               status_code, nickname_buffer, server_ip, PORT, total_client_num);
                         sprintf(nickname_res_buffer, "%d\n[welcome %s to CAU net-class chat room at %s:%d.]\n[There are %d users in the room.]\n",
                                                      status_code, nickname_buffer, server_ip, PORT, total_client_num);
                         printf("[%s has joined from %s:%d.]\n"
@@ -158,6 +156,12 @@ int main(void){
                         printf("%s\n", sendMsg);
                     } else {
                         printf("received %s\n", buffer);
+                        for(int i = 0; i < client_map->size; i++){
+                            int otherFd = client_map->data[i].value;
+                            if (otherFd == fd)
+                                continue;
+                            write(otherFd, buffer, sizeof(buffer));
+                        }
                         write(fd, buffer, sizeof(buffer));
 //                        type_str[str_len] = '\0';
 //                        printf("Command %s", type_str);

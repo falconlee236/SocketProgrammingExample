@@ -90,16 +90,39 @@ int main(int ac, char **av){
         exit(EXIT_FAILURE);
     }
 
+    fd_set read_fds;
+    FD_ZERO(&read_fds);
+    FD_SET(STDIN_FILENO, &read_fds);
+    FD_SET(client_socket, &read_fds);
+
     while (1){
-        // total buffer
-        char buffer[BUFFER_SIZE];
-        memset(buffer, 0, sizeof (buffer));
-        fgets(buffer, sizeof (buffer), stdin);
-        write(client_socket, buffer, BUFFER_SIZE);
-        printf("you enter %s\n", buffer);
-        memset(buffer, 0, sizeof (buffer));
-        read(client_socket, buffer, BUFFER_SIZE);
-        printf("you received %s\n", buffer);
+        struct timeval timeout;
+        timeout.tv_sec = 5;
+        timeout.tv_usec = 0;
+
+        fd_set tmp_fds = read_fds;
+        if (select(client_socket + 1, &tmp_fds, 0, 0,&timeout) < 0){
+            perror("select error");
+            exit(EXIT_FAILURE);
+        }
+
+        if (FD_ISSET(client_socket, &tmp_fds)){
+            char buffer[BUFFER_SIZE] = {0, };
+            ssize_t bytes_received = read(client_socket, buffer, BUFFER_SIZE);
+            if (bytes_received <= 0){
+                printf("Server disconnected\n");
+                break;
+            } else {
+                printf("you received %s\n", buffer);
+            }
+        }
+
+        if (FD_ISSET(STDIN_FILENO, &tmp_fds)){
+            char buffer[BUFFER_SIZE] = {0, };
+            fgets(buffer, sizeof (buffer), stdin);
+            write(client_socket, buffer, BUFFER_SIZE);
+            printf("you enter %s\n", buffer);
+        }
     }
 
     // memory free in map
