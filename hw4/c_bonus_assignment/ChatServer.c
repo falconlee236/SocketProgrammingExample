@@ -20,7 +20,6 @@
 #define NICkNAME_SIZE 40 // nickname size
 #define PORT 30532 // Server port number
 #define MAX_CLIENT 8 // Max client number
-#define SEC(t) ((t).tv_sec + (t).tv_nsec / 1e+9) // second to millisecond
 
 typedef struct s_clientInfo{
     char* nickname; // client nickname
@@ -28,8 +27,6 @@ typedef struct s_clientInfo{
     int port; //client port
 }client_info;
 
-// print current connect information
-void print_connect_status(int client_num, int total_client_num, int is_connected);
 // sigInt handler
 void sigint_handler(int signum);
 char* to_lower(char *str);
@@ -163,8 +160,8 @@ int main(void){
                         }
                     } else {
                         char sendMsg[BUFFER_SIZE] = {0, };
-                        if (buffer[0] > 0 && buffer[0] < 6){
-                            int command_type = buffer[0];
+                        if (buffer[0] > 0 && buffer[0] < 5){
+                            int command_type = (unsigned char)buffer[0];
                             if (command_type == 1){
                                 for(int i = 0; i < client_map->size; i++){
                                     int other_fd = (unsigned char)client_map->data[i].value;
@@ -173,6 +170,8 @@ int main(void){
                                             client_arr[other_fd].nickname, client_arr[other_fd].ip, client_arr[other_fd].port);
                                     strcat(sendMsg, client_info);
                                 }
+                            } else if (command_type == 4){
+                                sendMsg[0] = (char)command_type;
                             }
                             write(fd, sendMsg, sizeof(sendMsg));
                             continue;

@@ -20,9 +20,13 @@
 #define NICKNAME_SIZE 40
 #define SERVER_IP "127.0.0.1" // server ip
 #define SERVER_PORT 30532 // server port
+#define SEC_TO_NSEC(t) (((t).tv_sec * 1000000000) + (t).tv_nsec) // second to nanosecond
 
 // global client socket, using close fd when sigint occur
 int client_socket;
+
+// global time variable, using ping command
+struct timespec start_time;
 
 // sigInt handler
 void sigint_handler(int signum);
@@ -124,6 +128,13 @@ int main(int ac, char **av){
                 printf("\nServer disconnected\n");
                 break;
             } else { // otherwise, print msg
+                if (buffer[0] == 4){
+                    struct timespec cur_time;
+                    clock_gettime(CLOCK_MONOTONIC, &cur_time);
+                    long duration = SEC_TO_NSEC(cur_time) - SEC_TO_NSEC(start_time);
+                    printf("RTT = %lf ms\n", (double)duration / 1e+6);
+                    continue;
+                }
                 printf("%s", buffer);
             }
         }
@@ -162,6 +173,9 @@ int main(int ac, char **av){
                 if (command == 1 || command == 4) {
                     char command_buffer[1];
                     command_buffer[0] = command;
+                    if (command == 4){
+                        clock_gettime(CLOCK_MONOTONIC, &start_time);
+                    }
                     write(client_socket, command_buffer, 1);
                 } else {
                     char command_buffer[BUFFER_SIZE] = {0, };
