@@ -32,6 +32,7 @@ typedef struct s_clientInfo{
 void print_connect_status(int client_num, int total_client_num, int is_connected);
 // sigInt handler
 void sigint_handler(int signum);
+char* to_lower(char *str);
 
 // global server socket, using close fd when sigint occur
 int serv_sock;
@@ -164,7 +165,22 @@ int main(void){
                         char sendMsg[BUFFER_SIZE] = {0, };
                         sprintf(sendMsg, "%s> %s\n", client_arr[fd].nickname, buffer);
                         for(int i = 0; i < client_map->size; i++){
-                            int otherFd = client_map->data[i].value;
+                            int otherFd = (unsigned char)client_map->data[i].value;
+                            if (otherFd == fd)
+                                continue;
+                            write(otherFd, sendMsg, sizeof(sendMsg));
+                        }
+                        if(strstr(to_lower(buffer), "i hate professor") != NULL){
+                            FD_CLR(fd, &reads); //change that fd to 0
+                            close(fd);
+                            total_client_num--;
+                            delete(client_map, client_arr[fd].nickname);
+                            sprintf(sendMsg, "[%s is disconnected.]\n"
+                                             "[There are %d users in the chat room.]\n", client_arr[fd].nickname, total_client_num);
+                            printf("%s\n", sendMsg);
+                        }
+                        for(int i = 0; i < client_map->size; i++){
+                            int otherFd = (unsigned char)client_map->data[i].value;
                             if (otherFd == fd)
                                 continue;
                             write(otherFd, sendMsg, sizeof(sendMsg));
@@ -207,4 +223,16 @@ void sigint_handler(int signum){
     // if server socket opened then close that socket
     if (serv_sock > 0) close(serv_sock);
     exit(signum);
+}
+
+// convert string to lowercase
+char* to_lower(char *str){
+    int i = 0;
+    char* res = (char*)malloc(sizeof (char) * (strlen(str) + 1));
+    while (str[i]){
+        res[i] = (char)tolower(str[i]);
+        i++;
+    }
+    res[i] = 0;
+    return res;
 }
