@@ -151,16 +151,6 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 			// split nickname, msg
 			commandNickname := msgArr[0]
 			commandMsg := msgArr[1]
-			// check filtering message in secret or except command message
-			if strings.Contains(strings.ToLower(commandMsg), strings.ToLower("I hate professor")) {
-				sendMsg := fmt.Sprintf("[%s is disconnected.]\n"+
-					"[There are %d users in the chat room.]\n", nicknameStr, *totalClientNum-1)
-				for _, otherConn := range *clientMap {
-					otherConn.Write([]byte(sendMsg))
-				}
-				fmt.Print(sendMsg)
-				return
-			}
 			// secret command
 			if msgRes[0] == 2 {
 				// get nickname connection info
@@ -172,6 +162,16 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 				}
 				sendMsg := fmt.Sprintf("from: %s> %s\n", nicknameStr, commandMsg)
 				secretConn.Write([]byte(sendMsg))
+				// check filtering message in secret or except command message
+				if strings.Contains(strings.ToLower(commandMsg), strings.ToLower("I hate professor")) {
+					sendMsg := fmt.Sprintf("[%s is disconnected.]\n"+
+						"[There are %d users in the chat room.]\n", nicknameStr, *totalClientNum-1)
+					for _, otherConn := range *clientMap {
+						otherConn.Write([]byte(sendMsg))
+					}
+					fmt.Print(sendMsg)
+					return
+				}
 			} else if msgRes[0] == 3 { // sxcept command
 				for nickname, otherConn := range *clientMap {
 					// find except nickname, don't send msg to that nickname
@@ -181,9 +181,26 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 					sendMsg := fmt.Sprintf("from: %s> %s\n", nicknameStr, commandMsg)
 					otherConn.Write([]byte(sendMsg))
 				}
+				// check filtering message in secret or except command message
+				if strings.Contains(strings.ToLower(commandMsg), strings.ToLower("I hate professor")) {
+					sendMsg := fmt.Sprintf("[%s is disconnected.]\n"+
+						"[There are %d users in the chat room.]\n", nicknameStr, *totalClientNum-1)
+					for _, otherConn := range *clientMap {
+						otherConn.Write([]byte(sendMsg))
+					}
+					fmt.Print(sendMsg)
+					return
+				}
 			}
 		} else { // otherwise
 			msg := string(msgRes[:t-1])
+			for nickname, otherConn := range *clientMap {
+				if nickname == nicknameStr {
+					continue
+				}
+				sendMsg := fmt.Sprintf("%s> %s\n", nicknameStr, msg)
+				otherConn.Write([]byte(sendMsg))
+			}
 			// check filtering message in message
 			if strings.Contains(strings.ToLower(msg), strings.ToLower("I hate professor")) {
 				sendMsg := fmt.Sprintf("[%s is disconnected.]\n"+
@@ -193,13 +210,6 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 				}
 				fmt.Print(sendMsg)
 				return
-			}
-			for nickname, otherConn := range *clientMap {
-				if nickname == nicknameStr {
-					continue
-				}
-				sendMsg := fmt.Sprintf("%s> %s\n", nicknameStr, msg)
-				otherConn.Write([]byte(sendMsg))
 			}
 		}
 	}
