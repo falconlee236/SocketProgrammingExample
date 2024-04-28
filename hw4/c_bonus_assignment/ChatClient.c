@@ -183,9 +183,8 @@ int main(int ac, char **av){
                 } else {
                     char command_buffer[BUFFER_SIZE] = {0, };
                     command_buffer[0] = command;
-                    command_buffer[1] = '\0';
-                    strcat(command_buffer, command_split[1]);
                     command_buffer[1] = ' ';
+                    strcat(command_buffer, command_split[1]);
                     write(client_socket, command_buffer, sizeof(command_buffer));
                 }
             } else {
@@ -222,11 +221,15 @@ char **splitN(char *str, const char *delim, int n) {
     // save token to array
     tokens[count++] = token;
     // loop string end, n times
-    while (token != NULL && count < n) {
+    while (token != NULL && count < n - 1) {
         // get next token
         token = strtok(NULL, delim);
         // save token to array
         tokens[count++] = token;
+    }
+    // if there's more text left, add it as the last token
+    if (token != NULL && count == n - 1) {
+        tokens[count++] = strtok(NULL, ""); // add string
     }
     // add null pointer, that is end of array
     tokens[count] = NULL;

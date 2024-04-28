@@ -176,10 +176,35 @@ int main(void){
                                             client_arr[other_fd].nickname, client_arr[other_fd].ip, client_arr[other_fd].port);
                                     strcat(sendMsg, client_info);
                                 }
-                            } else if (command_type == 2) {
-
-                            } else if (command_type == 3) {
-
+                            } else if (command_type == 2 || command_type == 3) {
+                                // try to split 3 substring
+                                char** command_split = splitN(buffer, " ", 3);
+                                int len = 0;
+                                // calculate array length
+                                while (command_split[len])
+                                    len++;
+                                char dst_fd = find(client_map, command_split[1]);
+                                // secret, except error
+                                if (len != 3 || (dst_fd == -1 && command_type == 2)){
+                                    char* type_str = command_type == 2 ? "\\secret" : "\\except";
+                                    sprintf(sendMsg, "invalid command: %s %s %s\n", type_str, command_split[1], command_split[2]);
+                                } else {
+                                    // prepare special message
+                                    sprintf(sendMsg, "from: %s> %s\n", client_arr[fd].nickname, command_split[2]);
+                                    // except case
+                                    if (command_type == 3){
+                                        for(int i = 0; i < client_map->size; i++){
+                                            int otherFd = (unsigned char)client_map->data[i].value;
+                                            if (otherFd == dst_fd)
+                                                continue;
+                                            write(otherFd, sendMsg, sizeof(sendMsg));
+                                        }
+                                        free(command_split);
+                                        continue;
+                                    }
+                                    // secret case, change current client fd to target dst fd
+                                    fd = (int)dst_fd;
+                                }
                             } else if (command_type == 4){
                                 sendMsg[0] = (char)command_type;
                             }
@@ -252,11 +277,15 @@ char **splitN(char *str, const char *delim, int n) {
     // save token to array
     tokens[count++] = token;
     // loop string end, n times
-    while (token != NULL && count < n) {
+    while (token != NULL && count < n - 1) {
         // get next token
         token = strtok(NULL, delim);
         // save token to array
         tokens[count++] = token;
+    }
+    // if there's more text left, add it as the last token
+    if (token != NULL && count == n - 1) {
+        tokens[count++] = strtok(NULL, ""); // add string
     }
     // add null pointer, that is end of array
     tokens[count] = NULL;
