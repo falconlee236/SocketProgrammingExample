@@ -145,13 +145,15 @@ int main(void){
                     if(str_len == 0){ // disconnect request
                         char sendMsg[BUFFER_SIZE] = {0, };
                         FD_CLR(fd, &reads); //change that fd to 0
-                        close(fd);
-                        total_client_num--;
+                        close(fd); //disconnect client
+                        total_client_num--; //decrease total client num
+                        // remove client information
                         delete(client_map, client_arr[fd].nickname);
                         sprintf(sendMsg, "[%s left the room.]\n"
                                          "[There are %d users in the chat room.]\n",
                                          client_arr[fd].nickname, total_client_num);
                         printf("%s\n", sendMsg);
+                        // send to msg without itself
                         for(int i = 0; i < client_map->size; i++){
                             int otherFd = client_map->data[i].value;
                             if (otherFd == fd)
@@ -160,6 +162,7 @@ int main(void){
                         }
                     } else {
                         char sendMsg[BUFFER_SIZE] = {0, };
+                        //command case
                         if (buffer[0] > 0 && buffer[0] < 5){
                             int command_type = (unsigned char)buffer[0];
                             if (command_type == 1){
@@ -176,6 +179,7 @@ int main(void){
                             write(fd, sendMsg, sizeof(sendMsg));
                             continue;
                         }
+                        // not command case
                         sprintf(sendMsg, "%s> %s\n", client_arr[fd].nickname, buffer);
                         for(int i = 0; i < client_map->size; i++){
                             int otherFd = (unsigned char)client_map->data[i].value;
@@ -183,45 +187,23 @@ int main(void){
                                 continue;
                             write(otherFd, sendMsg, sizeof(sendMsg));
                         }
+                        // text filtering part, contains that text in buffer
                         if(strstr(to_lower(buffer), "i hate professor") != NULL){
                             total_client_num--;
+                            // client shutdown case
                             sprintf(sendMsg, "[%s is disconnected.]\n"
                                              "[There are %d users in the chat room.]\n", client_arr[fd].nickname, total_client_num);
                             printf("%s\n", sendMsg);
+                            // send msg to all client including itself
                             for(int i = 0; i < client_map->size; i++){
                                 int otherFd = (unsigned char)client_map->data[i].value;
                                 write(otherFd, sendMsg, sizeof(sendMsg));
                             }
                             FD_CLR(fd, &reads); //change that fd to 0
-                            close(fd);
+                            close(fd); // disconnect client
+                            // remove client info
                             delete(client_map, client_arr[fd].nickname);
                         }
-//                        type_str[str_len] = '\0';
-//                        printf("Command %s", type_str);
-//
-//                        char res[BUFFER_SIZE * 5] = {0, };
-//                        if (strncmp(type_str, "1\n", str_len) == 0){
-//                            char text[BUFFER_SIZE];
-//                            str_len = read(fd, text, BUFFER_SIZE);
-//                            for(int i = 0; i < str_len; i++){
-//                                if (islower(text[i])) res[i] = toupper(text[i]);
-//                                else res[i] = text[i];
-//                            }
-//                        } else if (strncmp(type_str, "2\n", str_len) == 0){
-//                            sprintf(res, "client IP = %s, port = %d\n", client_arr[fd].ip, client_arr[fd].port);
-//                        } else if (strncmp(type_str, "3\n", str_len) == 0){
-//                            sprintf(res, "request served %d=\n",1);
-//                        } else if (strncmp(type_str, "4\n", str_len) == 0){
-//                            struct timespec cur_time;
-//                            clock_gettime(CLOCK_MONOTONIC, &cur_time);
-//                            long duration = SEC(cur_time) - SEC(server_start);
-//                            int hours = duration / 3600;
-//                            int minutes = (hours % 3600) / 60;
-//                            int seconds = duration % 60;
-//                            sprintf(res, "run time = %02d:%02d:%02d\n", hours, minutes, seconds);
-//                        }
-//                        // send to client
-//                        write(fd, res, strlen(res));
                     }
                 }
             }
