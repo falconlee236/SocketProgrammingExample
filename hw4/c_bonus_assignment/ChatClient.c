@@ -77,7 +77,7 @@ int main(int ac, char **av){
     }
 
     // send nickname to server
-    if (write(client_socket, nicknameBuffer, NICKNAME_SIZE) == -1){
+    if (write(client_socket, nicknameBuffer, strlen(nicknameBuffer)) == -1){
         perror("Failed to connect to server\n");
         exit(EXIT_FAILURE);
     }

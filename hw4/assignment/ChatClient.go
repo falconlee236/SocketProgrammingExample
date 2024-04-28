@@ -113,12 +113,14 @@ func main() {
 			// encoding command to 1byte
 			byteValue, isExist := commandMap[command]
 			// cannot find in command table
-			if !isExist {
+			if !isExist ||
+				((byteValue == 1 || byteValue == 4 || byteValue == 5) && len(msgArr) != 1 ||
+					((byteValue == 2 || byteValue == 3) && len(msgArr) != 2)) {
 				fmt.Println("Invalid command")
 			}
 			if len(msgArr) > 1 {
 				msg := msgArr[1]
-				_, err := conn.Write(append([]byte{byteValue}, []byte(msg)...))
+				_, err := conn.Write(append([]byte{byteValue, ' '}, []byte(msg)...))
 				if err != nil {
 					log.Fatalf("Failed to connect to server\n%v", err)
 				}

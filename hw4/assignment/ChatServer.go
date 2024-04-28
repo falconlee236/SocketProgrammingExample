@@ -136,7 +136,7 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 		} else if msgRes[0] == 0 || ((msgRes[0] == 1 || msgRes[0] == 4 || msgRes[0] == 5) && t != 1) { // invalid command, within space in msg
 			fmt.Println("Invalid command: " + string(msgRes[1:]))
 		} else if msgRes[0] == 2 || msgRes[0] == 3 { // valid command, command secret, except
-			msgArr := strings.SplitN(string(msgRes[1:t]), " ", 2)
+			msgArr := strings.SplitN(string(msgRes[:t]), " ", 3)
 			var commandStr string = ""
 			if msgRes[0] == 2 {
 				commandStr = "\\secret"
@@ -144,13 +144,13 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 				commandStr = "\\except"
 			}
 			// command parameter error
-			if len(msgArr) != 2 {
+			if len(msgArr) != 3 {
 				fmt.Printf("Invalid command: %s %s\n", commandStr, string(msgRes[1:]))
 				continue
 			}
 			// split nickname, msg
-			commandNickname := msgArr[0]
-			commandMsg := msgArr[1]
+			commandNickname := msgArr[1]
+			commandMsg := msgArr[2]
 			// secret command
 			if msgRes[0] == 2 {
 				// get nickname connection info
