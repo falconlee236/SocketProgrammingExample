@@ -23,6 +23,7 @@
 #define SEC(t) ((t).tv_sec + (t).tv_nsec / 1e+9) // second to millisecond
 
 typedef struct s_clientInfo{
+    char* nickname; // client nickname
     char* ip; //client ip
     int port; //client port
 }client_info;
@@ -127,6 +128,7 @@ int main(void){
                         // get next client number
                         client_arr[clnt_sock].ip = client_ip;
                         client_arr[clnt_sock].port = client_port;
+                        client_arr[clnt_sock].nickname = nickname_buffer;
                         total_client_num++;
                         FD_SET(clnt_sock, &reads); // set that client fd to 1
                         if(fd_max < clnt_sock){ // set max fd to that client fd
@@ -144,11 +146,16 @@ int main(void){
                     char buffer[BUFFER_SIZE] = {0, };
                     memset(&buffer, 0, sizeof (buffer));
                     ssize_t str_len = read(fd, buffer, BUFFER_SIZE);
-                    printf("1----%s   ==== %d %ld\n", buffer, fd, str_len);
                     if(str_len == 0){ // disconnect request
+                        char sendMsg[BUFFER_SIZE] = {0, };
                         FD_CLR(fd, &reads); //change that fd to 0
                         close(fd);
                         total_client_num--;
+                        delete(client_map, client_arr[fd].nickname);
+                        sprintf(sendMsg, "[%s is disconnected.]\n"
+                                         "[There are %d users in the chat room.]\n",
+                                         client_arr[fd].nickname, total_client_num);
+                        printf("%s\n", sendMsg);
                     } else {
                         printf("received %s\n", buffer);
                         write(fd, buffer, sizeof(buffer));
@@ -186,7 +193,7 @@ int main(void){
 }
 
 void sigint_handler(int signum){
-    printf("\nBye bye~\n");
+    printf("\ngg~\n");
     // if server socket opened then close that socket
     if (serv_sock > 0) close(serv_sock);
     exit(signum);

@@ -26,6 +26,7 @@ int client_socket;
 
 // sigInt handler
 void sigint_handler(int signum);
+char **splitN(char *str, const char *delim, int n);
 
 int main(int ac, char **av){
     // system args handling
@@ -37,10 +38,6 @@ int main(int ac, char **av){
     char nicknameBuffer[NICKNAME_SIZE];
     memset(&nicknameBuffer, 0, sizeof (nicknameBuffer));
     strcpy(nicknameBuffer, av[1]);
-
-    // total buffer
-    char buffer[BUFFER_SIZE];
-    memset(&buffer, 0, sizeof (buffer));
 
     //signal
     signal(SIGINT, sigint_handler);
@@ -79,12 +76,23 @@ int main(int ac, char **av){
         perror("Failed to connect to server\n");
         exit(EXIT_FAILURE);
     }
+
+    char nicknameResBuffer[BUFFER_SIZE];
     // receive nickname response
-    if (read(client_socket, buffer, BUFFER_SIZE) == -1){
+    if (read(client_socket, nicknameResBuffer, BUFFER_SIZE) == -1){
         perror("Failed to connect to server\n");
         exit(EXIT_FAILURE);
     }
+    char** accessRes = splitN(nicknameResBuffer, "\n", 2);
+    printf("%s\n", accessRes[1]);
+    if (strcmp(accessRes[0], "404") == 0){
+        free(accessRes);
+        exit(EXIT_FAILURE);
+    }
+
     while (1){
+        // total buffer
+        char buffer[BUFFER_SIZE];
         memset(buffer, 0, sizeof (buffer));
         fgets(buffer, sizeof (buffer), stdin);
         write(client_socket, buffer, BUFFER_SIZE);
@@ -93,9 +101,6 @@ int main(int ac, char **av){
         read(client_socket, buffer, BUFFER_SIZE);
         printf("you received %s\n", buffer);
     }
-
-
-
 
     // memory free in map
     freeMap(commandMap);
@@ -107,4 +112,31 @@ void sigint_handler(int signum){
     // if server socket opened then close that socket
     if (client_socket > 0) close(client_socket);
     exit(signum);
+}
+
+// clang version splitN function
+char **splitN(char *str, const char *delim, int n) {
+    // pointer array allocated
+    char **tokens = (char **)malloc(sizeof(char *) * (n+1));
+    if (tokens == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
+    char *token;
+    int count = 0;
+    // get first token
+    token = strtok(str, delim);
+    // save token to array
+    tokens[count++] = token;
+    // loop string end, n times
+    while (token != NULL && count < n) {
+        // get next token
+        token = strtok(NULL, delim);
+        // save token to array
+        tokens[count++] = token;
+    }
+    // add null pointer, that is end of array
+    tokens[count] = NULL;
+    // return token array
+    return tokens;
 }
