@@ -121,7 +121,7 @@ int main(int ac, char **av){
             ssize_t bytes_received = read(client_socket, buffer, BUFFER_SIZE);
             // server disconnected case
             if (bytes_received <= 0){
-                printf("Server disconnected\n");
+                printf("\nServer disconnected\n");
                 break;
             } else { // otherwise, print msg
                 printf("%s", buffer);
