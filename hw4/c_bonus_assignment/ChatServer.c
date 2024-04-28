@@ -126,9 +126,9 @@ int main(void){
                         char *client_ip = inet_ntoa(clnt_addr.sin_addr);
                         int client_port = ntohs(clnt_addr.sin_port);
                         // get next client number
-                        client_arr[clnt_sock].ip = client_ip;
+                        client_arr[clnt_sock].ip = strdup(client_ip);
                         client_arr[clnt_sock].port = client_port;
-                        client_arr[clnt_sock].nickname = nickname_buffer;
+                        client_arr[clnt_sock].nickname = strdup(nickname_buffer);
                         total_client_num++;
                         FD_SET(clnt_sock, &reads); // set that client fd to 1
                         if(fd_max < clnt_sock){ // set max fd to that client fd
@@ -155,14 +155,14 @@ int main(void){
                                          client_arr[fd].nickname, total_client_num);
                         printf("%s\n", sendMsg);
                     } else {
-                        printf("received %s\n", buffer);
+                        char sendMsg[BUFFER_SIZE] = {0, };
+                        sprintf(sendMsg, "%s> %s\n", client_arr[fd].nickname, buffer);
                         for(int i = 0; i < client_map->size; i++){
                             int otherFd = client_map->data[i].value;
                             if (otherFd == fd)
                                 continue;
-                            write(otherFd, buffer, sizeof(buffer));
+                            write(otherFd, sendMsg, sizeof(sendMsg));
                         }
-                        write(fd, buffer, sizeof(buffer));
 //                        type_str[str_len] = '\0';
 //                        printf("Command %s", type_str);
 //

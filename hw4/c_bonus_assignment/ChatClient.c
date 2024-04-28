@@ -113,15 +113,15 @@ int main(int ac, char **av){
                 printf("Server disconnected\n");
                 break;
             } else {
-                printf("you received %s\n", buffer);
+                printf("%s", buffer);
             }
         }
 
         if (FD_ISSET(STDIN_FILENO, &tmp_fds)){
             char buffer[BUFFER_SIZE] = {0, };
             fgets(buffer, sizeof (buffer), stdin);
+            printf("\n");
             write(client_socket, buffer, BUFFER_SIZE);
-            printf("you enter %s\n", buffer);
         }
     }
 
