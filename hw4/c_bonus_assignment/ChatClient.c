@@ -19,7 +19,7 @@
 #define BUFFER_SIZE 1024
 #define NICKNAME_SIZE 40
 #define SERVER_IP "127.0.0.1" // server ip
-#define SERVER_PORT 30532 // server port
+#define SERVER_PORT 20532 // server port
 #define SEC_TO_NSEC(t) (((t).tv_sec * 1000000000) + (t).tv_nsec) // second to nanosecond
 
 // global client socket, using close fd when sigint occur
@@ -31,6 +31,7 @@ struct timespec start_time;
 // sigInt handler
 void sigint_handler(int signum);
 char **splitN(char *str, const char *delim, int n);
+void handle_golang_zeros(char *buffer, int buffer_size);
 
 int main(int ac, char **av){
     // system args handling
@@ -81,12 +82,13 @@ int main(int ac, char **av){
         exit(EXIT_FAILURE);
     }
 
-    char nicknameResBuffer[BUFFER_SIZE];
+    char nicknameResBuffer[BUFFER_SIZE] = {0, };
     // receive nickname response
     if (read(client_socket, nicknameResBuffer, BUFFER_SIZE) == -1){
         perror("Failed to connect to server\n");
         exit(EXIT_FAILURE);
     }
+    handle_golang_zeros(nicknameResBuffer, BUFFER_SIZE);
     // extract nickname status
     char** accessRes = splitN(nicknameResBuffer, "\n", 2);
     // print status msg
@@ -123,6 +125,7 @@ int main(int ac, char **av){
             char buffer[BUFFER_SIZE] = {0, };
             // get server response
             ssize_t bytes_received = read(client_socket, buffer, BUFFER_SIZE);
+            handle_golang_zeros(buffer, BUFFER_SIZE);
             // server disconnected case
             if (bytes_received <= 0){
                 printf("\nServer disconnected\n");
@@ -202,7 +205,11 @@ int main(int ac, char **av){
 void sigint_handler(int signum){
     printf("\ngg~\n");
     // if server socket opened then close that socket
-    if (client_socket > 0) close(client_socket);
+    if (client_socket > 0) {
+        char tmp[1] = {5};
+        write(client_socket, tmp, 1);
+        close(client_socket);
+    }
     exit(signum);
 }
 
@@ -235,4 +242,19 @@ char **splitN(char *str, const char *delim, int n) {
     tokens[count] = NULL;
     // return token array
     return tokens;
+}
+
+void handle_golang_zeros(char *buffer, int buffer_size) {
+    char output_buffer[buffer_size];
+    int output_index = 0;
+
+    for (int i = 0; i < buffer_size; i++) {
+        if (buffer[i] == 0) continue;
+        output_buffer[output_index++] = buffer[i];
+    }
+    // end null
+    output_buffer[output_index] = '\0';
+
+    // copy buffer to output buffer
+    memcpy(buffer, output_buffer, output_index + 1);
 }
