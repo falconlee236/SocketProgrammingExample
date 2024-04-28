@@ -130,8 +130,11 @@ int main(int ac, char **av){
             } else { // otherwise, print msg
                 if (buffer[0] == 4){
                     struct timespec cur_time;
+                    // get current clock time
                     clock_gettime(CLOCK_MONOTONIC, &cur_time);
+                    // calculate duration
                     long duration = SEC_TO_NSEC(cur_time) - SEC_TO_NSEC(start_time);
+                    // print RTT in millisecond
                     printf("RTT = %lf ms\n", (double)duration / 1e+6);
                     continue;
                 }
