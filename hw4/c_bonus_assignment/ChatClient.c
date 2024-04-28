@@ -134,8 +134,47 @@ int main(int ac, char **av){
             // input client msg, delimiter = "\n"
             fgets(buffer, sizeof (buffer), stdin);
             printf("\n");
-            // send to server
-            write(client_socket, buffer, BUFFER_SIZE);
+            // check command, command case
+            if (buffer[0] == '\\'){
+                size_t newline_idx = strcspn(buffer, "\n");
+                buffer[newline_idx] = '\0';
+                // try to split 2 substring
+                char** command_split = splitN(buffer + 1, " ", 2);
+                int len = 0;
+                // calculate array length
+                while (command_split[len]){
+                    len++;
+                }
+                // try to find that command is valid in map structure
+                char command = find(commandMap, command_split[0]);
+                if (command == -1 || // can't search command
+                    ((command == 1 || command == 4 || command == 5) && len != 1) || // ls, ping, quit error
+                    ((command == 2 || command == 3) && len != 2)){ // secret, except error
+                    printf("invalid command\n");
+                    continue;
+                }
+                // command quit
+                if (command == 5){
+                    free(command_split);
+                    sigint_handler(SIGINT);
+                }
+                // command ls, command ping
+                if (command == 1 || command == 4) {
+                    char command_buffer[1];
+                    command_buffer[0] = command;
+                    write(client_socket, command_buffer, 1);
+                } else {
+                    char command_buffer[BUFFER_SIZE] = {0, };
+                    command_buffer[0] = command;
+                    command_buffer[1] = '\0';
+                    strcat(command_buffer, command_split[1]);
+                    command_buffer[1] = ' ';
+                    write(client_socket, command_buffer, sizeof(command_buffer));
+                }
+            } else {
+                // send to server
+                write(client_socket, buffer, BUFFER_SIZE);
+            }
         }
     }
 
