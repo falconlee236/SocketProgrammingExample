@@ -83,16 +83,22 @@ int main(int ac, char **av){
         perror("Failed to connect to server\n");
         exit(EXIT_FAILURE);
     }
+    // extract nickname status
     char** accessRes = splitN(nicknameResBuffer, "\n", 2);
+    // print status msg
     printf("%s\n", accessRes[1]);
+    // is status is not ok, exit client program
     if (strcmp(accessRes[0], "404") == 0){
         free(accessRes);
         exit(EXIT_FAILURE);
     }
 
+    // select data structure init
     fd_set read_fds;
     FD_ZERO(&read_fds);
+    // set stdin to fd_set
     FD_SET(STDIN_FILENO, &read_fds);
+    // set client socket to fd_set
     FD_SET(client_socket, &read_fds);
 
     while (1){
@@ -100,27 +106,35 @@ int main(int ac, char **av){
         timeout.tv_sec = 5;
         timeout.tv_usec = 0;
 
+        // init tmp fd_set
         fd_set tmp_fds = read_fds;
+        // select function modifies original fd_set array, find fd was changed
         if (select(client_socket + 1, &tmp_fds, 0, 0,&timeout) < 0){
             perror("select error");
             exit(EXIT_FAILURE);
         }
 
+        // server data case
         if (FD_ISSET(client_socket, &tmp_fds)){
             char buffer[BUFFER_SIZE] = {0, };
+            // get server response
             ssize_t bytes_received = read(client_socket, buffer, BUFFER_SIZE);
+            // server disconnected case
             if (bytes_received <= 0){
                 printf("Server disconnected\n");
                 break;
-            } else {
+            } else { // otherwise, print msg
                 printf("%s", buffer);
             }
         }
 
+        // user standard input case
         if (FD_ISSET(STDIN_FILENO, &tmp_fds)){
             char buffer[BUFFER_SIZE] = {0, };
+            // input client msg, delimiter = "\n"
             fgets(buffer, sizeof (buffer), stdin);
             printf("\n");
+            // send to server
             write(client_socket, buffer, BUFFER_SIZE);
         }
     }
