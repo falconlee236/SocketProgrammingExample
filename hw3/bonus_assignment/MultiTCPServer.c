@@ -113,7 +113,7 @@ int main(void){
                     printf("Connection request from %s:%d\n", client_ip, client_port);
                     // get next client number
                     client_arr[clnt_sock].num = ++client_id;
-                    client_arr[clnt_sock].ip = client_ip;
+                    client_arr[clnt_sock].ip = strdup(client_ip);
                     client_arr[clnt_sock].port = client_port;
                     total_client_num++;
                     print_connect_status(client_arr[clnt_sock].num, total_client_num, 1);
