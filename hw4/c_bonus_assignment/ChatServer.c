@@ -150,10 +150,16 @@ int main(void){
                         close(fd);
                         total_client_num--;
                         delete(client_map, client_arr[fd].nickname);
-                        sprintf(sendMsg, "[%s is disconnected.]\n"
+                        sprintf(sendMsg, "[%s left the room.]\n"
                                          "[There are %d users in the chat room.]\n",
                                          client_arr[fd].nickname, total_client_num);
                         printf("%s\n", sendMsg);
+                        for(int i = 0; i < client_map->size; i++){
+                            int otherFd = client_map->data[i].value;
+                            if (otherFd == fd)
+                                continue;
+                            write(otherFd, sendMsg, sizeof(sendMsg));
+                        }
                     } else {
                         char sendMsg[BUFFER_SIZE] = {0, };
                         sprintf(sendMsg, "%s> %s\n", client_arr[fd].nickname, buffer);
