@@ -163,6 +163,20 @@ int main(void){
                         }
                     } else {
                         char sendMsg[BUFFER_SIZE] = {0, };
+                        if (buffer[0] > 0 && buffer[0] < 6){
+                            int command_type = buffer[0];
+                            if (command_type == 1){
+                                for(int i = 0; i < client_map->size; i++){
+                                    int other_fd = (unsigned char)client_map->data[i].value;
+                                    char client_info[BUFFER_SIZE] = {0, };
+                                    sprintf(client_info, "<%s, %s, %d>\n",
+                                            client_arr[other_fd].nickname, client_arr[other_fd].ip, client_arr[other_fd].port);
+                                    strcat(sendMsg, client_info);
+                                }
+                            }
+                            write(fd, sendMsg, sizeof(sendMsg));
+                            continue;
+                        }
                         sprintf(sendMsg, "%s> %s\n", client_arr[fd].nickname, buffer);
                         for(int i = 0; i < client_map->size; i++){
                             int otherFd = (unsigned char)client_map->data[i].value;
