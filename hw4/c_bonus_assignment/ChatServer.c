@@ -183,6 +183,7 @@ int main(void){
                                 // calculate array length
                                 while (command_split[len])
                                     len++;
+                                // find dst fd in map
                                 char dst_fd = find(client_map, command_split[1]);
                                 // secret, except error
                                 if (len != 3 || (dst_fd == -1 && command_type == 2)){
@@ -191,19 +192,36 @@ int main(void){
                                 } else {
                                     // prepare special message
                                     sprintf(sendMsg, "from: %s> %s\n", client_arr[fd].nickname, command_split[2]);
-                                    // except case
-                                    if (command_type == 3){
+                                    free(command_split);
+                                    // secret case
+                                    if (command_type == 2){
+                                        write(dst_fd, sendMsg, sizeof(sendMsg));
+                                    } else { // except case
                                         for(int i = 0; i < client_map->size; i++){
                                             int otherFd = (unsigned char)client_map->data[i].value;
                                             if (otherFd == dst_fd)
                                                 continue;
                                             write(otherFd, sendMsg, sizeof(sendMsg));
                                         }
-                                        free(command_split);
-                                        continue;
                                     }
-                                    // secret case, change current client fd to target dst fd
-                                    fd = (int)dst_fd;
+                                    char filter_buffer[BUFFER_SIZE] = {0, };
+                                    if(strstr(to_lower(sendMsg), "i hate professor") != NULL){
+                                        total_client_num--;
+                                        // client shutdown case
+                                        sprintf(filter_buffer, "[%s is disconnected.]\n"
+                                                               "[There are %d users in the chat room.]\n", client_arr[fd].nickname, total_client_num);
+                                        printf("%s\n", filter_buffer);
+                                        // send msg to all client including itself
+                                        for(int i = 0; i < client_map->size; i++){
+                                            int otherFd = (unsigned char)client_map->data[i].value;
+                                            write(otherFd, filter_buffer, sizeof(filter_buffer));
+                                        }
+                                        FD_CLR(fd, &reads); //change that fd to 0
+                                        close(fd); // disconnect client
+                                        // remove client info
+                                        delete(client_map, client_arr[fd].nickname);
+                                    }
+                                    continue;
                                 }
                             } else if (command_type == 4){
                                 sendMsg[0] = (char)command_type;
