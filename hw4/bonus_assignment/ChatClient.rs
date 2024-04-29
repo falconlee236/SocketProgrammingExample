@@ -6,6 +6,8 @@ use std::time::Duration;
 
 const MSG_SIZE: usize = 100;
 
+// https://mogoh-developer.tistory.com/16
+
 fn main() {
     println!("[Client]");
 
