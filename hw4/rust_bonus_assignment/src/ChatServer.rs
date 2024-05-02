@@ -9,19 +9,13 @@ const MSG_SIZE: usize = 100;
 fn main() {
     println!("[Server]");
 
-    // println!("\nEnter server ip");
-    // let mut ip = String::new();
-    // io::stdin().read_line(&mut ip).expect("Reading from stdin failed");
-    // let server_ip = ip.trim().to_string();
-    let server_ip = "127.0.0.1";
-
     // println!("\nEnter server port");
     // let mut port = String::new();
     // io::stdin().read_line(&mut port).expect("Reading from stdin failed");
     // let server_port = port.trim().to_string();
     let server_port = "20532";
 
-    let server_address = format!("{}{}{}", &server_ip, &String::from(":"), &server_port);
+    let server_address = format!("0.0.0.0{}{}", &String::from(":"), &server_port);
 
     let server = TcpListener::bind(server_address).expect("Lister failed to bind");
     server.set_nonblocking(true).expect("failed to initialize non blocking listener");
