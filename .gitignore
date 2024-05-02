@@ -28,4 +28,4 @@ nsl2024-1.iml
 *.class
 
 #rust target
-*/target
+hw4/rust_bonus_assignment/target/
