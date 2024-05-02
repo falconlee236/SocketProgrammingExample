@@ -26,3 +26,6 @@ nsl2024-1.iml
 
 #java file
 *.class
+
+#rust target
+*/target
