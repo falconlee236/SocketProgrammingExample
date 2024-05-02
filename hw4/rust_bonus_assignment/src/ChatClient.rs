@@ -4,23 +4,42 @@ use std::sync::mpsc::{self, TryRecvError};
 use std::thread;
 use std::time::Duration;
 use std::env::args;
+use std::process::exit;
+use std::collections::HashMap;
 
-const MSG_SIZE: usize = 100;
+const MSG_SIZE: usize = 1024;
+// server info
+const SERVER_IP: &str = "127.0.0.1";
+const SERVER_PORT: usize = 20532;
 
 fn main() {
+    // get system argument 
     let args: Vec<String> = args().collect();
-    println!("name is {}", args[1]);
-
-    let server_address = "127.0.0.1:20532";
-
-    let mut client = TcpStream::connect(server_address).expect("stream failed to connect");
-    client.set_nonblocking(true).expect("failed to initialize non-blocking");
+    // system args must have 2
+    if args.len() != 2 {
+        println!("This program must be run a one name argument");
+        exit(1);
+    }
+    // get nickname from system args
+    let nickname = &args[1];
+    // define command Map
+    let mut command_map : HashMap<&str, u8>  = HashMap::new();
+    command_map.insert("ls", 0x01);
+    command_map.insert("secret", 0x02);
+    command_map.insert("except", 0x03);
+    command_map.insert("ping", 0x04);
+    command_map.insert("quit", 0x05);
+    
+    // server address ip
+    let server_address = format!("{}:{}", SERVER_IP, SERVER_PORT);
+    let mut client_socket = TcpStream::connect(server_address).expect("stream failed to connect");
+    client_socket.set_nonblocking(true).expect("failed to initialize non-blocking");
 
     let (tx, rx) = mpsc::channel::<String>();
     thread::spawn(move || loop {
         // Read message:
         let mut buff = vec![0; MSG_SIZE];
-        match client.read_exact(&mut buff) {
+        match client_socket.read_exact(&mut buff) {
             Ok(_) => {
                 let msg_byte_vec = buff.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
                 let msg = String::from_utf8(msg_byte_vec).expect("invalid utf8 message");
@@ -40,7 +59,7 @@ fn main() {
             Ok(msg) => {
                 let mut buff = msg.clone().into_bytes();
                 buff.resize(MSG_SIZE, 0);
-                client.write_all(&buff).expect("writing to socket failed");
+                client_socket.write_all(&buff).expect("writing to socket failed");
             },
             Err(TryRecvError::Empty) => (),
             Err(TryRecvError::Disconnected) => break
