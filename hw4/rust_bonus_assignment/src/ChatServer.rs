@@ -5,17 +5,10 @@ use std::thread;
 use std::time::Duration;
 
 const MSG_SIZE: usize = 100;
+const SERVER_PORT: usize = 20532;
 
 fn main() {
-    println!("[Server]");
-
-    // println!("\nEnter server port");
-    // let mut port = String::new();
-    // io::stdin().read_line(&mut port).expect("Reading from stdin failed");
-    // let server_port = port.trim().to_string();
-    let server_port = "20532";
-
-    let server_address = format!("0.0.0.0{}{}", &String::from(":"), &server_port);
+    let server_address = format!("0.0.0.0{}{}", &String::from(":"), SERVER_PORT);
 
     let server = TcpListener::bind(server_address).expect("Lister failed to bind");
     server.set_nonblocking(true).expect("failed to initialize non blocking listener");

@@ -3,18 +3,14 @@ use std::net::TcpStream;
 use std::sync::mpsc::{self, TryRecvError};
 use std::thread;
 use std::time::Duration;
+use std::env::args;
 
 const MSG_SIZE: usize = 100;
 
-// https://mogoh-developer.tistory.com/16
-
 fn main() {
-    println!("[Client]");
+    let args: Vec<String> = args().collect();
+    println!("name is {}", args[1]);
 
-    // println!("\nEnter server server_address");
-    // let mut address = String::new();
-    // io::stdin().read_line(&mut address).expect("Reading from stdin failed");
-    // let server_address = address.trim().to_string();
     let server_address = "127.0.0.1:20532";
 
     let mut client = TcpStream::connect(server_address).expect("stream failed to connect");
