@@ -60,10 +60,12 @@ fn main() {
                                     if n > 0{
                                         let msg_byte_vec = msg_res.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
                                         let msg = String::from_utf8(msg_byte_vec).expect("invalid utf8 message");
-                                        println!("---------------------------------------------------------");
-                                        println!("{}", msg);
-                                        println!("---------------------------------------------------------");
-                                        if socket.write(msg.as_bytes()).is_err() {};
+                                        let msg = format!("{}> {}\n", &nickname, msg);
+                                        for (other_nickname, stream) in client_map.lock().unwrap().iter_mut(){
+                                            if &nickname != other_nickname {
+                                                if stream.write(msg.as_bytes()).is_err() {}
+                                            }
+                                        }
                                     } else { // client connection closed
                                         println!("connection overed");
                                         *total_client_num.lock().unwrap() -= 1;

@@ -61,9 +61,15 @@ fn main() {
                     let msg_byte_vec = msg_res.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
                     let msg = String::from_utf8(msg_byte_vec).expect("invalid utf8 message");
                     println!("client recieved {}", msg);
+                } else {
+                    println!("Server connection closed");
+                    exit(1);
                 }
             },
-            Err(_) => {}
+            Err(_) => {
+                println!("Server connection closed");
+                exit(1);
+            }
         }
     });
 
@@ -75,7 +81,7 @@ fn main() {
         // // find command index
         // let command_idx = msg_input.find("\\");
         if client_socket.write(msg_input.as_bytes()).is_err() {
-            println!("connection overed");
+            println!("Server connection closed");
             exit(1);
         }
     }
