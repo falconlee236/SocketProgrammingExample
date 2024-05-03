@@ -1,8 +1,6 @@
-use std::io::{self, ErrorKind, Read, Write};
+use std::io::{self, Read, Write};
 use std::net::TcpStream;
-use std::sync::mpsc::{self, TryRecvError};
 use std::thread;
-use std::time::Duration;
 use std::env::args;
 use std::process::exit;
 use std::collections::HashMap;
@@ -49,5 +47,18 @@ fn main() {
     // if status is error
     if access_res[0] == "404" {
         exit(1);
+    }
+
+    loop {
+        // input msg from user
+        let mut msg_buff = String::new();
+        io::stdin().read_line(&mut msg_buff).expect("Reading from stdin failed");
+        let msg_input = msg_buff.trim_end_matches("\n").to_string();
+        // // find command index
+        // let command_idx = msg_input.find("\\");
+        if client_socket.write(msg_buff.as_bytes()).is_err() {
+            println!("connection overed");
+            exit(1);
+        }
     }
 }
