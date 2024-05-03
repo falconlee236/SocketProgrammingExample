@@ -4,7 +4,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
 
-const MSG_SIZE: usize = 100;
+const MSG_SIZE: usize = 1024;
 const SERVER_PORT: usize = 20532;
 
 fn main() {
