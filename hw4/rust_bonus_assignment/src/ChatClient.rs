@@ -49,6 +49,24 @@ fn main() {
         exit(1);
     }
 
+    let mut read_client_socket = client_socket.try_clone().expect("failed clone");
+    thread::spawn(move || loop{
+        // Read message:
+        let mut msg_res = vec![0; MSG_SIZE];
+        match read_client_socket.read(&mut msg_res) {
+            // read success
+            Ok(n) => {
+            // read message case
+                if n > 0{
+                    let msg_byte_vec = msg_res.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
+                    let msg = String::from_utf8(msg_byte_vec).expect("invalid utf8 message");
+                    println!("client recieved {}", msg);
+                }
+            },
+            Err(_) => {}
+        }
+    });
+
     loop {
         // input msg from user
         let mut msg_buff = String::new();
@@ -56,7 +74,7 @@ fn main() {
         let msg_input = msg_buff.trim_end_matches("\n").to_string();
         // // find command index
         // let command_idx = msg_input.find("\\");
-        if client_socket.write(msg_buff.as_bytes()).is_err() {
+        if client_socket.write(msg_input.as_bytes()).is_err() {
             println!("connection overed");
             exit(1);
         }

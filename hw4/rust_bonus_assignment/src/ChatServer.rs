@@ -63,6 +63,7 @@ fn main() {
                                         println!("---------------------------------------------------------");
                                         println!("{}", msg);
                                         println!("---------------------------------------------------------");
+                                        if socket.write(msg.as_bytes()).is_err() {};
                                     } else { // client connection closed
                                         println!("connection overed");
                                         *total_client_num.lock().unwrap() -= 1;
