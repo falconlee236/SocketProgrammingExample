@@ -12,4 +12,8 @@ path = "src/ChatClient.rs"
 [[bin]]
 name = "rs_chat_server"
 path = "src/ChatServer.rs"
+
+[profile.release]
+path = "src"
+
 [dependencies]
