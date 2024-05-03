@@ -32,56 +32,22 @@ fn main() {
     
     // server address ip
     let server_address = format!("{}:{}", SERVER_IP, SERVER_PORT);
+    // make client socket;
     let mut client_socket = TcpStream::connect(server_address).expect("stream failed to connect");
-    client_socket.set_nonblocking(true).expect("failed to initialize non-blocking");
+    // write to server
+    if client_socket.write(nickname.as_bytes()).is_err() {};
 
-    let (tx, rx) = mpsc::channel::<String>();
-    thread::spawn(move || loop {
-        // Read message:
-        let mut buff = vec![0; MSG_SIZE];
-        match client_socket.read_exact(&mut buff) {
-            Ok(_) => {
-                let msg_byte_vec = buff.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
-                let msg = String::from_utf8(msg_byte_vec).expect("invalid utf8 message");
-                println!("---------------------------------------------------------");
-                println!("{}", msg);
-                println!("---------------------------------------------------------");
-            },
-            Err(ref err) if err.kind() == ErrorKind::WouldBlock => (),
-            Err(_) => {
-                println!("connection with server was served");
-                break;
-            }
-        }
-
-        // Receive message from channel and Write message to the server
-        match rx.try_recv() {
-            Ok(msg) => {
-                let mut buff = msg.clone().into_bytes();
-                buff.resize(MSG_SIZE, 0);
-                client_socket.write_all(&buff).expect("writing to socket failed");
-            },
-            Err(TryRecvError::Empty) => (),
-            Err(TryRecvError::Disconnected) => break
-        }
-
-        thread::sleep(Duration::from_millis(100));
-    });
-
-    // println!("\nwhat is your name?");
-    // let mut name_buff = String::new();
-    // io::stdin().read_line(&mut name_buff).expect("Reading from stdin failed");
-    // let name = name_buff.trim().to_string();
-    // println!("\nPlease enter a message to send");
-    // send nickname to server
-    if tx.send(nickname.to_string()).is_err() {exit(1)};
-
-
-    loop {
-        let mut buff = String::new();
-        io::stdin().read_line(&mut buff).expect("Reading from stdin failed");
-        let msg = format!("{}{}{:?}{}", nickname, &String::from("님이 "), &buff.trim().to_string(), &String::from("을(를) 입력하셨습니다."));
-        if tx.send(msg).is_err() { break }
+    // read from server
+    let mut access_buff = vec![0; MSG_SIZE];
+    if client_socket.read(&mut access_buff).is_err() {};
+    let access_msg = access_buff.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
+    let access_msg = String::from_utf8(access_msg).expect("invalid utf8 message");
+    // msg to split by new line delimeter
+    let access_res: Vec<&str> = access_msg.splitn(2, "\n").collect();
+    // print message
+    println!("{}", access_res[1]);
+    // if status is error
+    if access_res[0] == "404" {
+        exit(1);
     }
-
 }
