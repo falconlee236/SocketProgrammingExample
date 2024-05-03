@@ -68,16 +68,19 @@ fn main() {
         thread::sleep(Duration::from_millis(100));
     });
 
-    println!("\nwhat is your name?");
-    let mut name_buff = String::new();
-    io::stdin().read_line(&mut name_buff).expect("Reading from stdin failed");
-    let name = name_buff.trim().to_string();
-    println!("\nPlease enter a message to send");
+    // println!("\nwhat is your name?");
+    // let mut name_buff = String::new();
+    // io::stdin().read_line(&mut name_buff).expect("Reading from stdin failed");
+    // let name = name_buff.trim().to_string();
+    // println!("\nPlease enter a message to send");
+    // send nickname to server
+    if tx.send(nickname.to_string()).is_err() {exit(1)};
+
 
     loop {
         let mut buff = String::new();
         io::stdin().read_line(&mut buff).expect("Reading from stdin failed");
-        let msg = format!("{}{}{:?}{}", &name, &String::from("님이 "), &buff.trim().to_string(), &String::from("을(를) 입력하셨습니다."));
+        let msg = format!("{}{}{:?}{}", nickname, &String::from("님이 "), &buff.trim().to_string(), &String::from("을(를) 입력하셨습니다."));
         if tx.send(msg).is_err() { break }
     }
 
