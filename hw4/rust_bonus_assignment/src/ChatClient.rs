@@ -50,20 +50,24 @@ fn main() {
     let access_res: Vec<&str> = access_msg.splitn(2, "\n").collect();
     // print message
     println!("{}", access_res[1]);
-    // if status is error
+    // if status is error, do not enter the chat room
     if access_res[0] == "404" {
         exit(1);
     }
 
+    // sigint handling
     let mut sigint_client_socket = client_socket.try_clone().expect("failed clone");
     set_handler(move || {
         println!("\ngg~\n");
+        // write to server with quit command
         if sigint_client_socket.write(&[5]).is_err() {};
         exit(1);
     }).expect("Error setting Ctrl+C handler");
 
+    // also, you want to use start time in thread, must wrap Mutex
     let mut read_client_socket = client_socket.try_clone().expect("failed clone");
     let start_clone = Arc::clone(&start);
+    // create read thread
     thread::spawn(move || loop{
         // Read message:
         let mut msg_res = vec![0; MSG_SIZE];
@@ -134,7 +138,7 @@ fn main() {
                         // cannot find command table
                         None => println!("Invalid command")
                     }
-                } else {
+                } else { // otherwise send to server
                     if client_socket.write(msg_input.as_bytes()).is_err() {
                         println!("Server connection closed");
                         exit(1);

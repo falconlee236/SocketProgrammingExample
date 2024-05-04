@@ -20,44 +20,58 @@ fn main() {
     // get server address
     let server_address = format!("127.0.0.1{}{}", &String::from(":"), SERVER_PORT);
 
+    // create server socket
     let server_socket = TcpListener::bind(server_address).expect("Lister failed to bind");
 
     println!("\nWaiting for client connection..");
 
+    // create client info map, total number with Mutex
+    // in rust every shared resource must wrap in Mutex and Arc type
     let client_map : Arc<Mutex<HashMap<String, TcpStream>>>  = Arc::new(Mutex::new(HashMap::new()));
     let total_client_num = Arc::new(Mutex::new(0));
     loop {
+        // set clinet connection
         if let Ok((mut socket, addr)) = server_socket.accept() {
             //get client's nickname from client
             let mut nickname_buff = vec![0; MSG_SIZE];
+            // read client name 
             match socket.read(&mut nickname_buff) {
                 Ok(_) => {
+                    // convert vec to string
                     let msg = nickname_buff.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
                     let nickname = String::from_utf8(msg).expect("invalid utf8 message");
                     let mut status_code : usize = 200;
                     let send_msg = {
+                        // lock mutex, get data
                         let mut client_map = client_map.lock().unwrap();
                         let mut total_client_num = total_client_num.lock().unwrap();
+                        // chat room is full
                         if *total_client_num == 8{
                             status_code = 404;
                             format!("{}\n[chatting room full. cannot connect.]\n", status_code)
-                        }
+                        } // already has nickname
                         else if client_map.contains_key(&nickname) {
                             status_code = 404;
                             format!("{}\n[nickname already used by another user. cannot connect.]\n", status_code)
-                        } else {
+                        } else { // otherwise - enter the chat room
+                            // add client number
                             *total_client_num += 1;
+                            // insert map to client socket
                             client_map.insert(nickname.clone(), socket.try_clone().expect("failed to clone client"));
                             format!("{}\n[welcome {} to CAU net-class chat room at {}.]\n[There are {} users in the room.]", status_code, &nickname, server_socket.local_addr().expect("failed to get address"), total_client_num)
                         }
                     };
 
+                    // write msg to client
                     if socket.write(send_msg.as_bytes()).is_err() {};
+                    // client enter the chat room case
                     if status_code == 200 {
                         println!("[{} has joined from {}.]\n[There are {} users in room.]", &nickname, addr, total_client_num.lock().unwrap());
+                        // thread want to use Arc shared resoucre, clone shared data
+                        // when rust create thread, outter scope's ownership move to thread
                         let client_map = client_map.clone();
                         let total_client_num = total_client_num.clone();
-                        // aka. TCPClientHandler
+                        // aka. TCPClientHandler / create client handle thread
                         thread::spawn(move || loop {
                             // Read message:
                             let mut msg_res = vec![0; MSG_SIZE];
@@ -78,7 +92,7 @@ fn main() {
                                                     msg.push_str(&format!("<{}, {}, {}>\n", other_nickname, remote_addr.ip(), remote_addr.port()));
                                                 }
                                                 if socket.write(msg.as_bytes()).is_err() {}
-                                            } else if command_type == 2 || command_type == 3 {
+                                            } else if command_type == 2 || command_type == 3 { // secret, except case
                                                 let command_str = if command_type == 2 {
                                                     "\\secret"
                                                 } else {
@@ -123,12 +137,16 @@ fn main() {
                                                     }
                                                 }
 
+                                                // text filtering
                                                 if target_msg.to_lowercase().contains("i hate professor") {
+                                                    // subtract total_client_num
                                                     *total_client_num.lock().unwrap() -= 1;
                                                     let msg = format!("[{} is disconnected.]\n[There are {} users in the chat room.]\n", &nickname, *total_client_num.lock().unwrap());
+                                                    // send to every client info of disconnecting
                                                     for (_, stream) in client_map.lock().unwrap().iter_mut(){
                                                         if stream.write(msg.as_bytes()).is_err() {}
                                                     }
+                                                    // disconnect client
                                                     client_map.lock().unwrap().remove(&nickname);
                                                     println!("{}", msg);
                                                     break;
@@ -152,14 +170,16 @@ fn main() {
                                                 println!("{}", msg);
                                                 break;
                                             }
-                                        } else {
+                                        } else { // otherwise, get client message
                                             let msg = String::from_utf8(msg_byte_vec).expect("invalid utf8 message");
                                             let msg = format!("{}> {}\n", &nickname, msg);
+                                            // send message to other client
                                             for (other_nickname, stream) in client_map.lock().unwrap().iter_mut(){
                                                 if &nickname != other_nickname {
                                                     if stream.write(msg.as_bytes()).is_err() {}
                                                 }
                                             }
+                                            // text filtering
                                             if msg.to_lowercase().contains("i hate professor") {
                                                 *total_client_num.lock().unwrap() -= 1;
                                                 let msg = format!("[{} is disconnected.]\n[There are {} users in the chat room.]\n", &nickname, *total_client_num.lock().unwrap());
