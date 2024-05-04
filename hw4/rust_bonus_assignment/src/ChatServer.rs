@@ -67,9 +67,10 @@ fn main() {
                                     // read message case
                                     if n > 0 { 
                                         let msg_byte_vec = msg_res.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
-                                        if msg_byte_vec[0] > 0 && msg_byte_vec[0] < 6 {
+                                        let command_type = msg_byte_vec[0];
+                                        if command_type > 0 && command_type < 6 {
                                             // ls command
-                                            if msg_byte_vec[0] == 1 {
+                                            if command_type == 1 {
                                                 let mut msg = String::new();
                                                 for (other_nickname, stream) in client_map.lock().unwrap().iter_mut(){
                                                     // get remove addr
@@ -77,9 +78,54 @@ fn main() {
                                                     msg.push_str(&format!("<{}, {}, {}>\n", other_nickname, remote_addr.ip(), remote_addr.port()));
                                                 }
                                                 if socket.write(msg.as_bytes()).is_err() {}
-                                            } else if msg_byte_vec[0] == 4 { // ping command
+                                            } else if command_type == 2 || command_type == 3 {
+                                                let command_str = if command_type == 2 {
+                                                    "\\secret"
+                                                } else {
+                                                    "\\except"
+                                                };
+                                                // get not command part in 3 string
+                                                let msg_arr: Vec<&str> = std::str::from_utf8(&msg_byte_vec).expect("invalid utf8 message").splitn(3, " ").collect();
+                                                // command parameter error
+                                                if msg_arr.len() != 3 {
+                                                    println!("Invalid command: {}", command_str);
+                                                    continue;
+                                                }
+
+                                                // get target nickname, msg
+                                                let target_nickname = msg_arr[1];
+                                                let target_msg = msg_arr[2];
+
+                                                // secret command
+                                                if command_type == 2 {
+                                                    // get target connetion info
+                                                    match client_map.lock().unwrap().get(target_nickname) {
+                                                        Some(mut stream) => {
+                                                            let msg = format!("from: {}> {}\n", &nickname, target_msg);
+                                                            if stream.write(msg.as_bytes()).is_err() {}
+                                                        },
+                                                        // cannot find target nickname in client map
+                                                        None => {
+                                                            println!("Invalid command: \\secret");
+                                                            continue;
+                                                        },
+                                                    }
+                                                }
+
+                                                // except command
+                                                if command_type == 3 {
+                                                    let msg = format!("from: {}> {}\n", &nickname, target_msg);
+                                                    for (other_nickname, stream) in client_map.lock().unwrap().iter_mut(){
+                                                        // send msg excpet target nickname
+                                                        if other_nickname != target_nickname {
+                                                            if stream.write(msg.as_bytes()).is_err() {}
+                                                        }
+                                                    }
+                                                }
+
+                                            } else if command_type == 4 { // ping command
                                                 if socket.write(&[4]).is_err() {}
-                                            } else if msg_byte_vec[0] == 5 { //quit command
+                                            } else if command_type == 5 { //quit command
                                                 // subtract client number
                                                 *total_client_num.lock().unwrap() -= 1;
                                                 // remove client info
@@ -95,7 +141,6 @@ fn main() {
                                                 println!("{}", msg);
                                                 break;
                                             }
-                                            // let msg = String::from_utf8(msg_byte_vec[2..].to_vec()).expect("invalid utf8 message");       
                                         } else {
                                             let msg = String::from_utf8(msg_byte_vec).expect("invalid utf8 message");
                                             let msg = format!("{}> {}\n", &nickname, msg);

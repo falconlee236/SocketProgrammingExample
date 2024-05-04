@@ -98,6 +98,7 @@ fn main() {
         let mut msg_buff = String::new();
         io::stdin().read_line(&mut msg_buff).expect("Reading from stdin failed");
         let msg_input = msg_buff.trim_end_matches("\n").to_string();
+        let msg_input = msg_input.trim().to_string();
         println!();
         // // find command index
         match msg_input.find("\\") {
@@ -116,8 +117,7 @@ fn main() {
                                     continue;
                             }
                             if msg_arr.len() > 1 {
-                                let msg = format!("{} {}", encoding, msg_arr[1]);
-                                if client_socket.write(msg.as_bytes()).is_err() {
+                                if client_socket.write(&[&[encoding, b' '], msg_arr[1].as_bytes()].concat()).is_err() {
                                     println!("Server connection closed");
                                     exit(1);
                                 }
