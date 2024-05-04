@@ -4,6 +4,8 @@ use std::thread;
 use std::env::args;
 use std::process::exit;
 use std::collections::HashMap;
+use std::time::{SystemTime, UNIX_EPOCH};
+use std::sync::{Arc, Mutex};
 
 use ctrlc::set_handler;
 
@@ -13,6 +15,8 @@ const SERVER_IP: &str = "127.0.0.1";
 const SERVER_PORT: usize = 20532;
 
 fn main() {
+    // start time
+    let start = Arc::new(Mutex::new(SystemTime::now()));
     // get system argument 
     let args: Vec<String> = args().collect();
     // system args must have 2
@@ -58,17 +62,24 @@ fn main() {
     }).expect("Error setting Ctrl+C handler");
 
     let mut read_client_socket = client_socket.try_clone().expect("failed clone");
+    let start_clone = Arc::clone(&start);
     thread::spawn(move || loop{
         // Read message:
         let mut msg_res = vec![0; MSG_SIZE];
         match read_client_socket.read(&mut msg_res) {
             // read success
             Ok(n) => {
-            // read message case
-                if n > 0{
+                // ping command case
+                if n == 1 || msg_res[0] == 4 {
+                    // get duration since start time
+                    let start = start_clone.lock().unwrap();
+                    let since = (*start).duration_since(UNIX_EPOCH).expect("Time went backwards");
+                    let nanosecond = since.as_secs() * 1_000_000_000 + u64::from(since.subsec_nanos());
+                    println!("RTT = {}ms", nanosecond as f64 / 1e+6);
+                } else if n > 0{ // read message case
                     let msg_byte_vec = msg_res.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
                     let msg = String::from_utf8(msg_byte_vec).expect("invalid utf8 message");
-                    println!("client recieved {}", msg);
+                    println!("{}", msg);
                 } else {
                     println!("Server connection closed");
                     exit(1);
@@ -87,10 +98,54 @@ fn main() {
         io::stdin().read_line(&mut msg_buff).expect("Reading from stdin failed");
         let msg_input = msg_buff.trim_end_matches("\n").to_string();
         // // find command index
-        // let command_idx = msg_input.find("\\");
-        if client_socket.write(msg_input.as_bytes()).is_err() {
-            println!("Server connection closed");
-            exit(1);
+        match msg_input.find("\\") {
+            // if command
+            Some(index) => {
+                if index == 0 {
+                    let msg_arr: Vec<&str> = msg_input.splitn(2, " ").collect();
+                    let command = &msg_arr[0][1..];
+                    // encoding command to byte
+                    match command_map.get(command) {
+                        Some(&encoding) => {
+                            // command argument error handling
+                            if ((encoding == 1 || encoding == 4 || encoding == 5) && msg_arr.len() != 1) || 
+                                ((encoding == 2 || encoding == 3) && msg_arr.len() != 2) {
+                                    println!("Invalid command");
+                                    continue;
+                            }
+                            if msg_arr.len() > 1 {
+                                let msg = format!("{} {}", encoding, msg_arr[1]);
+                                println!("{} ", encoding);
+                                if client_socket.write(msg.as_bytes()).is_err() {
+                                    println!("Server connection closed");
+                                    exit(1);
+                                }
+                            } else {
+                                // start calculate start time
+                                let mut start = start.lock().unwrap();
+                                *start = SystemTime::now();
+                                if client_socket.write(msg_input.as_bytes()).is_err() {
+                                    println!("Server connection closed");
+                                    exit(1);
+                                }
+                            }
+                        },
+                        // cannot find command table
+                        None => println!("Invalid command")
+                    }
+                } else {
+                    if client_socket.write(msg_input.as_bytes()).is_err() {
+                        println!("Server connection closed");
+                        exit(1);
+                    }
+                }
+            },
+            None => {
+                if client_socket.write(msg_input.as_bytes()).is_err() {
+                    println!("Server connection closed");
+                    exit(1);
+                }
+            }
         }
     }
 }

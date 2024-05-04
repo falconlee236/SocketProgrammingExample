@@ -13,8 +13,5 @@ path = "src/ChatClient.rs"
 name = "rs_chat_server"
 path = "src/ChatServer.rs"
 
-[profile.release]
-path = "src"
-
 [dependencies]
 ctrlc = "3.3.0"
