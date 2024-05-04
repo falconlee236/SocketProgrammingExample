@@ -4,7 +4,7 @@ use std::thread;
 use std::env::args;
 use std::process::exit;
 use std::collections::HashMap;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::Instant;
 use std::sync::{Arc, Mutex};
 
 use ctrlc::set_handler;
@@ -16,7 +16,7 @@ const SERVER_PORT: usize = 20532;
 
 fn main() {
     // start time
-    let start = Arc::new(Mutex::new(SystemTime::now()));
+    let start = Arc::new(Mutex::new(Instant::now()));
     // get system argument 
     let args: Vec<String> = args().collect();
     // system args must have 2
@@ -74,8 +74,8 @@ fn main() {
                 if n == 1 || msg_res[0] == 4 {
                     // get duration since start time
                     let start = start_clone.lock().unwrap();
-                    let since = (*start).duration_since(UNIX_EPOCH).expect("Time went backwards");
-                    let nanosecond = since.as_secs() * 1_000_000_000 + u64::from(since.subsec_nanos());
+                    let since = Instant::now().duration_since(*start);
+                    let nanosecond = since.as_nanos();
                     println!("RTT = {}ms", nanosecond as f64 / 1e+6);
                 } else if n > 0{ // read message case
                     let msg_byte_vec = msg_res.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
@@ -124,7 +124,7 @@ fn main() {
                             } else {
                                 // start calculate start time
                                 let mut start = start.lock().unwrap();
-                                *start = SystemTime::now();
+                                *start = Instant::now();
                                 if client_socket.write(&[encoding]).is_err() {
                                     println!("Server connection closed");
                                     exit(1);

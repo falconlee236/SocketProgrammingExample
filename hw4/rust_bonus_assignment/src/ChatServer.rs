@@ -77,6 +77,8 @@ fn main() {
                                                     msg.push_str(&format!("<{}, {}, {}>\n", other_nickname, remote_addr.ip(), remote_addr.port()));
                                                 }
                                                 if socket.write(msg.as_bytes()).is_err() {}
+                                            } else if msg_byte_vec[0] == 4 { // ping command
+                                                if socket.write(&[4]).is_err() {}
                                             } else if msg_byte_vec[0] == 5 { //quit command
                                                 // subtract client number
                                                 *total_client_num.lock().unwrap() -= 1;
