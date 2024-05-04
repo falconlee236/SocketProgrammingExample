@@ -1,16 +1,24 @@
 use std::io::{Read, Write};
+use std::process::exit;
 use std::sync::{Arc, Mutex};
 use std::net::TcpListener;
 use std::net::TcpStream;
 use std::thread;
 use std::collections::HashMap;
+use ctrlc::set_handler;
 
 const MSG_SIZE: usize = 1024;
 const SERVER_PORT: usize = 20532;
 
 fn main() {
+    //sigint handler
+    set_handler(|| {
+        println!("\ngg~\n");
+        exit(127);
+    }).expect("Error setting Ctrl+C handler");
+
     // get server address
-    let server_address = format!("0.0.0.0{}{}", &String::from(":"), SERVER_PORT);
+    let server_address = format!("127.0.0.1{}{}", &String::from(":"), SERVER_PORT);
 
     let server_socket = TcpListener::bind(server_address).expect("Lister failed to bind");
 
@@ -41,7 +49,7 @@ fn main() {
                             *total_client_num += 1;
                             client_map.insert(nickname.clone(), socket.try_clone().expect("failed to clone client"));
                             format!("{}\n[welcome {} to CAU net-class chat room at {}.]
-                                \n[There are {} users in the room.]", status_code, &nickname, server_socket.local_addr().expect("failed to get address"), total_client_num)
+                            \n[There are {} users in the room.]", status_code, &nickname, server_socket.local_addr().expect("failed to get address"), total_client_num)
                         }
                     };
 

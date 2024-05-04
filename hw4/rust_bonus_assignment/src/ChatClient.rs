@@ -5,6 +5,8 @@ use std::env::args;
 use std::process::exit;
 use std::collections::HashMap;
 
+use ctrlc::set_handler;
+
 const MSG_SIZE: usize = 1024;
 // server info
 const SERVER_IP: &str = "127.0.0.1";
@@ -48,6 +50,12 @@ fn main() {
     if access_res[0] == "404" {
         exit(1);
     }
+
+    let mut _sigint_client_socket = client_socket.try_clone().expect("failed clone");
+    set_handler(move || {
+        println!("\ngg~\n");
+        exit(1);
+    }).expect("Error setting Ctrl+C handler");
 
     let mut read_client_socket = client_socket.try_clone().expect("failed clone");
     thread::spawn(move || loop{
