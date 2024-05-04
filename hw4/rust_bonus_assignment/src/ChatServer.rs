@@ -123,6 +123,17 @@ fn main() {
                                                     }
                                                 }
 
+                                                if target_msg.to_lowercase().contains("i hate professor") {
+                                                    *total_client_num.lock().unwrap() -= 1;
+                                                    let msg = format!("[{} is disconnected.]\n[There are {} users in the chat room.]\n", &nickname, *total_client_num.lock().unwrap());
+                                                    for (_, stream) in client_map.lock().unwrap().iter_mut(){
+                                                        if stream.write(msg.as_bytes()).is_err() {}
+                                                    }
+                                                    client_map.lock().unwrap().remove(&nickname);
+                                                    println!("{}", msg);
+                                                    break;
+                                                }
+
                                             } else if command_type == 4 { // ping command
                                                 if socket.write(&[4]).is_err() {}
                                             } else if command_type == 5 { //quit command
@@ -148,6 +159,16 @@ fn main() {
                                                 if &nickname != other_nickname {
                                                     if stream.write(msg.as_bytes()).is_err() {}
                                                 }
+                                            }
+                                            if msg.to_lowercase().contains("i hate professor") {
+                                                *total_client_num.lock().unwrap() -= 1;
+                                                let msg = format!("[{} is disconnected.]\n[There are {} users in the chat room.]\n", &nickname, *total_client_num.lock().unwrap());
+                                                for (_, stream) in client_map.lock().unwrap().iter_mut(){
+                                                    if stream.write(msg.as_bytes()).is_err() {}
+                                                }
+                                                client_map.lock().unwrap().remove(&nickname);
+                                                println!("{}", msg);
+                                                break;
                                             }
                                         }
                                     } else { // client connection closed
