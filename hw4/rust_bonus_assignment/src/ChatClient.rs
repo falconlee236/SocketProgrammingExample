@@ -55,9 +55,10 @@ fn main() {
         exit(1);
     }
 
-    let mut _sigint_client_socket = client_socket.try_clone().expect("failed clone");
+    let mut sigint_client_socket = client_socket.try_clone().expect("failed clone");
     set_handler(move || {
         println!("\ngg~\n");
+        if sigint_client_socket.write(&[5]).is_err() {};
         exit(1);
     }).expect("Error setting Ctrl+C handler");
 
@@ -97,6 +98,7 @@ fn main() {
         let mut msg_buff = String::new();
         io::stdin().read_line(&mut msg_buff).expect("Reading from stdin failed");
         let msg_input = msg_buff.trim_end_matches("\n").to_string();
+        println!();
         // // find command index
         match msg_input.find("\\") {
             // if command
@@ -115,7 +117,6 @@ fn main() {
                             }
                             if msg_arr.len() > 1 {
                                 let msg = format!("{} {}", encoding, msg_arr[1]);
-                                println!("{} ", encoding);
                                 if client_socket.write(msg.as_bytes()).is_err() {
                                     println!("Server connection closed");
                                     exit(1);
@@ -124,7 +125,7 @@ fn main() {
                                 // start calculate start time
                                 let mut start = start.lock().unwrap();
                                 *start = SystemTime::now();
-                                if client_socket.write(msg_input.as_bytes()).is_err() {
+                                if client_socket.write(&[encoding]).is_err() {
                                     println!("Server connection closed");
                                     exit(1);
                                 }

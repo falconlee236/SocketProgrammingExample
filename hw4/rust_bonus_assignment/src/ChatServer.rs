@@ -48,8 +48,7 @@ fn main() {
                         } else {
                             *total_client_num += 1;
                             client_map.insert(nickname.clone(), socket.try_clone().expect("failed to clone client"));
-                            format!("{}\n[welcome {} to CAU net-class chat room at {}.]
-                            \n[There are {} users in the room.]", status_code, &nickname, server_socket.local_addr().expect("failed to get address"), total_client_num)
+                            format!("{}\n[welcome {} to CAU net-class chat room at {}.]\n[There are {} users in the room.]", status_code, &nickname, server_socket.local_addr().expect("failed to get address"), total_client_num)
                         }
                     };
 
@@ -58,6 +57,7 @@ fn main() {
                         println!("[{} has joined from {}.]\n[There are {} users in room.]", &nickname, addr, total_client_num.lock().unwrap());
                         let client_map = client_map.clone();
                         let total_client_num = total_client_num.clone();
+                        // aka. TCPClientHandler
                         thread::spawn(move || loop {
                             // Read message:
                             let mut msg_res = vec![0; MSG_SIZE];
@@ -65,19 +65,48 @@ fn main() {
                                 // read success
                                 Ok(n) => {
                                     // read message case
-                                    if n > 0{
+                                    if n > 0 { 
                                         let msg_byte_vec = msg_res.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
-                                        let msg = String::from_utf8(msg_byte_vec).expect("invalid utf8 message");
-                                        let msg = format!("{}> {}\n", &nickname, msg);
-                                        for (other_nickname, stream) in client_map.lock().unwrap().iter_mut(){
-                                            if &nickname != other_nickname {
-                                                if stream.write(msg.as_bytes()).is_err() {}
+                                        if msg_byte_vec[0] > 0 && msg_byte_vec[0] < 6 {
+                                            // ls command
+                                            if msg_byte_vec[0] == 1 {
+                                                let mut msg = String::new();
+                                                for (other_nickname, stream) in client_map.lock().unwrap().iter_mut(){
+                                                    // get remove addr
+                                                     let remote_addr = stream.peer_addr().expect("Failed to get peer address");
+                                                    msg.push_str(&format!("<{}, {}, {}>\n", other_nickname, remote_addr.ip(), remote_addr.port()));
+                                                }
+                                                if socket.write(msg.as_bytes()).is_err() {}
+                                            } else if msg_byte_vec[0] == 5 { //quit command
+                                                // subtract client number
+                                                *total_client_num.lock().unwrap() -= 1;
+                                                // remove client info
+                                                client_map.lock().unwrap().remove(&nickname);
+                                                let msg = format!("\n[{} left the room.]\n[There are {} users now.]\n\n", &nickname, *total_client_num.lock().unwrap());
+                                                // send msg to other client
+                                                for (other_nickname, stream) in client_map.lock().unwrap().iter_mut(){
+                                                    if &nickname != other_nickname {
+                                                        if stream.write(msg.as_bytes()).is_err() {}
+                                                    }
+                                                }
+                                                // print msg to server
+                                                println!("{}", msg);
+                                                break;
+                                            }
+                                            // let msg = String::from_utf8(msg_byte_vec[2..].to_vec()).expect("invalid utf8 message");       
+                                        } else {
+                                            let msg = String::from_utf8(msg_byte_vec).expect("invalid utf8 message");
+                                            let msg = format!("{}> {}\n", &nickname, msg);
+                                            for (other_nickname, stream) in client_map.lock().unwrap().iter_mut(){
+                                                if &nickname != other_nickname {
+                                                    if stream.write(msg.as_bytes()).is_err() {}
+                                                }
                                             }
                                         }
                                     } else { // client connection closed
-                                        println!("connection overed");
                                         *total_client_num.lock().unwrap() -= 1;
                                         client_map.lock().unwrap().remove(&nickname);
+                                        println!("\n[{} left the room.]\n[There are {} users now.]\n\n", &nickname, *total_client_num.lock().unwrap());
                                         break;    
                                     }
                                 },
