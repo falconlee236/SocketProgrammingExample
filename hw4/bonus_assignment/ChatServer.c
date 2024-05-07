@@ -230,6 +230,23 @@ int main(void){
                             } else if (command_type == 4){
                                 sendMsg[0] = (char)command_type;
                             } else if (command_type == 5){
+                                char sendMsg[BUFFER_SIZE] = { 0,};
+                                FD_CLR(fd, &reads); // change that fd to 0
+                                close(fd);          // disconnect client
+                                total_client_num--; // decrease total client num
+                                // remove client information
+                                delete (client_map, client_arr[fd].nickname);
+                                sprintf(sendMsg, "[%s left the room.]\n"
+                                                 "[There are %d users in the chat room.]\n",
+                                        client_arr[fd].nickname, total_client_num);
+                                printf("%s\n", sendMsg);
+                                // send to msg without itself
+                                for (int i = 0; i < client_map->size; i++){
+                                    int otherFd = client_map->data[i].value;
+                                    if (otherFd == fd)
+                                        continue;
+                                    write(otherFd, sendMsg, sizeof(sendMsg));
+                                }
                                 continue;
                             }
                             write(fd, sendMsg, sizeof(sendMsg));
