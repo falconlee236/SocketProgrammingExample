@@ -117,6 +117,7 @@ func main() {
 				((byteValue == 1 || byteValue == 4 || byteValue == 5) && len(msgArr) != 1 ||
 					((byteValue == 2 || byteValue == 3) && len(msgArr) != 2)) {
 				fmt.Println("Invalid command")
+				continue
 			}
 			if len(msgArr) > 1 {
 				msg := msgArr[1]
