@@ -86,12 +86,12 @@ fn main() {
                     let msg = String::from_utf8(msg_byte_vec).expect("invalid utf8 message");
                     println!("{}", msg);
                 } else {
-                    println!("Server connection closed");
+                    println!("gg~");
                     exit(1);
                 }
             },
             Err(_) => {
-                println!("Server connection closed");
+                println!("gg~");
                 exit(1);
             }
         }
@@ -122,7 +122,7 @@ fn main() {
                             }
                             if msg_arr.len() > 1 {
                                 if client_socket.write(&[&[encoding, b' '], msg_arr[1].as_bytes()].concat()).is_err() {
-                                    println!("Server connection closed");
+                                    println!("gg~");
                                     exit(1);
                                 }
                             } else {
@@ -130,7 +130,7 @@ fn main() {
                                 let mut start = start.lock().unwrap();
                                 *start = Instant::now();
                                 if client_socket.write(&[encoding]).is_err() {
-                                    println!("Server connection closed");
+                                    println!("gg~");
                                     exit(1);
                                 }
                             }
@@ -140,7 +140,7 @@ fn main() {
                     }
                 } else { // otherwise send to server
                     if client_socket.write(msg_input.as_bytes()).is_err() {
-                        println!("Server connection closed");
+                        println!("gg~");
                         exit(1);
                     }
                 }
