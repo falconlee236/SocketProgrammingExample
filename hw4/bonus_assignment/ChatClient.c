@@ -128,7 +128,7 @@ int main(int ac, char **av){
             handle_golang_zeros(buffer, BUFFER_SIZE);
             // server disconnected case
             if (bytes_received <= 0){
-                printf("\nServer disconnected\n");
+                printf("\ngg~\n");
                 break;
             } else { // otherwise, print msg
                 if (buffer[0] == 4){
