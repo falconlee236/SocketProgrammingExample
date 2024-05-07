@@ -192,7 +192,8 @@ int main(void){
                                 // secret, except error
                                 if (len != 3 || (dst_fd == -1 && command_type == 2)){
                                     char* type_str = command_type == 2 ? "\\secret" : "\\except";
-                                    sprintf(sendMsg, "invalid command: %s %s %s\n", type_str, command_split[1], command_split[2]);
+                                    printf("invalid command: %s %s %s\n", type_str, command_split[1], command_split[2]);
+                                    continue;
                                 } else {
                                     // prepare special message
                                     sprintf(sendMsg, "from: %s> %s\n", client_arr[fd].nickname, command_split[2]);
