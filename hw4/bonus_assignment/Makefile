@@ -14,10 +14,10 @@ C_OBJS_SERVER = $(C_SRCS_SERVER:.c=.o)
 all: $(C_NAME_CLIENT) $(C_NAME_SERVER)
 
 $(C_NAME_CLIENT): $(C_OBJS_CLIENT)
-	$(CC) $^ -o $@ -lpthread
+	$(CC) $^ -o $@
 
 $(C_NAME_SERVER): $(C_OBJS_SERVER)
-	$(CC) $^ -o $@ -lpthread
+	$(CC) $^ -o $@
 
 %.o: %.c
 	$(CC) -c $< -o $@
