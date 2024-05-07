@@ -193,7 +193,8 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 				}
 			}
 		} else { // otherwise
-			msg := string(msgRes[:t-1])
+			msg := string(msgRes[:t])
+			msg = strings.TrimRight(msg, "\n")
 			for nickname, otherConn := range *clientMap {
 				if nickname == nicknameStr {
 					continue
