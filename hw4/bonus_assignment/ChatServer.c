@@ -18,7 +18,7 @@
 
 #define BUFFER_SIZE 1024 // Max Buffer size
 #define NICkNAME_SIZE 40 // nickname size
-#define PORT 30532 // Server port number
+#define PORT 20532 // Server port number
 #define MAX_CLIENT 8 // Max client number
 
 typedef struct s_clientInfo{
@@ -49,7 +49,7 @@ int main(void){
     int total_client_num = 0;
 
     // client info array init
-    client_info client_arr[MAX_CLIENT + 3];
+    client_info client_arr[MAX_CLIENT + 10];
 
     // assign fd for server socket, and IPv4, TCP
     serv_sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -119,9 +119,13 @@ int main(void){
                     if (total_client_num == 8){
                         status_code = 404;
                         sprintf(nickname_res_buffer, "%d\n[chatting room full. cannot connect.]\n", status_code);
+                    	write(clnt_sock, nickname_res_buffer, strlen(nickname_res_buffer));
+                        break;
                     } else if (find(client_map, nickname_buffer) != -1){
                         status_code = 404;
                         sprintf(nickname_res_buffer, "%d\n[nickname already used by another user. cannot connect.]\n", status_code);
+                    	write(clnt_sock, nickname_res_buffer, strlen(nickname_res_buffer));
+                        break;
                     } else {
                         insert(client_map, nickname_buffer, clnt_sock);
                         char *client_ip = inet_ntoa(clnt_addr.sin_addr);
@@ -166,7 +170,7 @@ int main(void){
                     } else {
                         char sendMsg[BUFFER_SIZE] = {0, };
                         //command case
-                        if (buffer[0] > 0 && buffer[0] < 5){
+                        if (buffer[0] > 0 && buffer[0] < 6){
                             int command_type = (unsigned char)buffer[0];
                             if (command_type == 1){
                                 for(int i = 0; i < client_map->size; i++){
@@ -225,6 +229,8 @@ int main(void){
                                 }
                             } else if (command_type == 4){
                                 sendMsg[0] = (char)command_type;
+                            } else if (command_type == 5){
+                                continue;
                             }
                             write(fd, sendMsg, sizeof(sendMsg));
                             continue;
