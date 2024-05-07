@@ -1,3 +1,7 @@
+/*
+ChatServer.rs
+20190532 sangyun lee
+*/
 use std::io::{Read, Write};
 use std::process::exit;
 use std::sync::{Arc, Mutex};

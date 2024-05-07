@@ -1,3 +1,8 @@
+/*
+ChatClient.rs
+20190532 sangyun lee
+ */
+
 use std::io::{self, Read, Write};
 use std::net::TcpStream;
 use std::thread;
