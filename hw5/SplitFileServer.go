@@ -46,12 +46,12 @@ func main() {
 			continue
 		}
 		// file handling function with goroutine
-		go handleClient(conn)
+		go putFile(conn)
 	}
 }
 
 // Store file from client request handling function
-func handleClient(conn net.Conn) {
+func putFile(conn net.Conn) {
 	defer func(conn net.Conn) {
 		err := conn.Close()
 		if err != nil {
