@@ -1,3 +1,8 @@
+/*
+SplitFileServer.go
+20190532 sang yun lee
+*/
+
 package main
 
 import (
@@ -9,47 +14,64 @@ import (
 )
 
 func main() {
+	//if len(os.Args) != 2 {
+	//	fmt.Println("This program only accepts one argument")
+	//	os.Exit(1)
+	//}
+	//serverPort := os.Args[1]
+
+	// server Port
 	serverPort := "20532"
 
-	// 서버 시작
+	// listen from client request
 	listener, err := net.Listen("tcp", ":"+serverPort)
 	if err != nil {
-		fmt.Println("서버 시작 실패:", err)
+		fmt.Println("fail to start server: ", err)
 		return
 	}
-	defer listener.Close()
-	fmt.Println("서버 시작, 클라이언트 연결 대기중...")
+	defer func(listener net.Listener) {
+		err := listener.Close()
+		if err != nil {
+			fmt.Println("fail to close listener: ", err)
+		}
+	}(listener)
+	fmt.Println("Waiting for connections...")
 
+	// main loop
 	for {
-		// 클라이언트 연결 대기
+		// accept to client request
 		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Println("클라이언트 연결 실패:", err)
+			fmt.Println("fail to accept client request: ", err)
 			continue
 		}
-
-		// 클라이언트가 연결되었을 때 파일을 수신하는 함수 호출
+		// file handling function with goroutine
 		go handleClient(conn)
 	}
 }
 
-// 클라이언트로부터 파일을 수신하여 저장하는 함수
+// Store file from client request handling function
 func handleClient(conn net.Conn) {
-	defer conn.Close()
+	defer func(conn net.Conn) {
+		err := conn.Close()
+		if err != nil {
+			fmt.Println("fail to close connection: ", err)
+		}
+	}(conn)
 
-	// 파일 크기 읽기
+	// get file size from client
 	fileSizeBuffer := make([]byte, 8)
 	cnt, err := conn.Read(fileSizeBuffer)
 	if err != nil {
-		fmt.Println("파일 크기 읽기 실패:", err)
+		fmt.Println("fail to read file size:", err)
 		return
 	}
 
-	// 파일 이름 읽기
+	// get file name from client
 	filenameBuffer := make([]byte, 1024)
 	_, err = conn.Read(filenameBuffer)
 	if err != nil {
-		fmt.Println("파일 이름 읽기 실패:", err)
+		fmt.Println("fail to read file name:", err)
 		return
 	}
 	filename := string(filenameBuffer)
@@ -58,17 +80,22 @@ func handleClient(conn net.Conn) {
 	// 파일 크기 변환
 	fileSize, err := strconv.ParseInt(string(fileSizeBuffer[:cnt]), 10, 64)
 	if err != nil {
-		fmt.Println("파일 크기 변환 실패:", err)
+		fmt.Println("fail to transfer file size:", err)
 		return
 	}
 
 	// 파일 생성
 	file, err := os.Create(filename)
 	if err != nil {
-		fmt.Println("파일 생성 실패:", err)
+		fmt.Println("fail to create file:", err)
 		return
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Println("fail to close file:", err)
+		}
+	}(file)
 
 	// 파일 내용 수신하여 저장
 	var receivedBytes int64
@@ -77,7 +104,7 @@ func handleClient(conn net.Conn) {
 		n, err := conn.Read(buffer)
 		if err != nil {
 			if err != io.EOF {
-				fmt.Println("파일 읽기 실패:", err)
+				fmt.Println("fail to read file:", err)
 			}
 			break
 		}
@@ -85,7 +112,7 @@ func handleClient(conn net.Conn) {
 
 		// 파일에 받은 내용 쓰기
 		if _, err := file.Write(buffer[:n]); err != nil {
-			fmt.Println("파일 쓰기 실패:", err)
+			fmt.Println("fail to write file:", err)
 			return
 		}
 
@@ -95,5 +122,6 @@ func handleClient(conn net.Conn) {
 		}
 	}
 
-	fmt.Printf("%s 파일 전송 완료\n", filename)
+	fmt.Printf("%s file store sucessful!\n", filename)
+	return
 }
