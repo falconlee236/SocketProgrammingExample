@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 )
 
 func main() {
@@ -30,18 +31,23 @@ func main() {
 	secondServerName := "127.0.0.1"
 	secondServerPort := "50532"
 
+	var wg sync.WaitGroup
+
 	// put command case
 	if commandName == "put" {
+		wg.Add(2)
 		// sendFile odd byte
-		sendFile(fileName, firstServerName, firstServerPort, 0)
+		go sendFile(fileName, firstServerName, firstServerPort, 0, &wg)
 		// sendFile even byte
-		sendFile(fileName, secondServerName, secondServerPort, 1)
+		go sendFile(fileName, secondServerName, secondServerPort, 1, &wg)
+		wg.Wait()
 	} else if os.Args[1] == "get" { // get command case
+		wg.Add(2)
 		// receiveFile odd byte
-		receiveFile(fileName, firstServerName, firstServerPort, 0)
+		go receiveFile(fileName, firstServerName, firstServerPort, 0, &wg)
 		// receiveFile even byte
-		receiveFile(fileName, secondServerName, secondServerPort, 1)
-
+		go receiveFile(fileName, secondServerName, secondServerPort, 1, &wg)
+		wg.Wait()
 		// get file extension from fileName
 		fileExtension := filepath.Ext(fileName)
 		// get file name without extension from fileName
@@ -52,8 +58,10 @@ func main() {
 			fmt.Println("fail to create file:", err)
 			os.Exit(1)
 		}
+		// set Temp file name
 		tmpFileName1 := fmt.Sprintf("%s-part%d%stmp%s", fileName, 1, fileExtension, fileExtension)
 		tmpFileName2 := fmt.Sprintf("%s-part%d%stmp%s", fileName, 2, fileExtension, fileExtension)
+		// open Temp file
 		tmpFile1, _ := os.Open(tmpFileName1)
 		tmpFile2, _ := os.Open(tmpFileName2)
 		// set close Function and delete tmp file
@@ -124,18 +132,29 @@ func main() {
 }
 
 // put file to server
-func sendFile(fileName string, serverName string, serverPort string, part int) {
-
+func sendFile(fileName string, serverName string, serverPort string, part int, wg *sync.WaitGroup) {
+	defer wg.Done()
 	// connect to TCP server
 	conn, err := net.Dial("tcp", serverName+":"+serverPort)
 	if err != nil {
 		fmt.Println("fail to connect server: ", err)
-		return
+		os.Exit(1)
 	}
+	defer func(conn net.Conn) {
+		err := conn.Close()
+		if err != nil {
+			fmt.Println("socket close error : ", err)
+			os.Exit(1)
+		}
+	}(conn)
 
 	// prepare command string to send command
 	commandStr := "put"
-	conn.Write([]byte(commandStr))
+	_, err = conn.Write([]byte(commandStr))
+	if err != nil {
+		fmt.Println("Write failed")
+		os.Exit(1)
+	}
 	commandBuffer := make([]byte, 1024)
 	read, _ := conn.Read(commandBuffer)
 	// is server response is not ok
@@ -147,8 +166,16 @@ func sendFile(fileName string, serverName string, serverPort string, part int) {
 	// try to open file
 	originalFile, err := os.Open(fileName)
 	if err != nil {
-		return
+		fmt.Println("File Open failed")
+		os.Exit(1)
 	}
+	defer func(originalFile *os.File) {
+		err := originalFile.Close()
+		if err != nil {
+			fmt.Println("File Closed failed")
+			os.Exit(1)
+		}
+	}(originalFile)
 
 	// get file extension from fileName
 	fileExtension := filepath.Ext(fileName)
@@ -157,7 +184,11 @@ func sendFile(fileName string, serverName string, serverPort string, part int) {
 	// join that strings
 	fileName = fmt.Sprintf("%s-part%d%s", fileName, part+1, fileExtension)
 	// send to target File name
-	conn.Write([]byte(fileName))
+	_, err = conn.Write([]byte(fileName))
+	if err != nil {
+		fmt.Println("Write failed")
+		os.Exit(1)
+	}
 	fileNameBuffer := make([]byte, 1024)
 	read, _ = conn.Read(fileNameBuffer)
 	if string(fileNameBuffer[:read]) != "ok" {
@@ -175,7 +206,11 @@ func sendFile(fileName string, serverName string, serverPort string, part int) {
 	// convert file Size string to Integer
 	size := strconv.FormatInt(fileInfo.Size(), 10)
 	// send file Size to server
-	conn.Write([]byte(size))
+	_, err = conn.Write([]byte(size))
+	if err != nil {
+		fmt.Println("Write failed")
+		os.Exit(1)
+	}
 	fileSizeBuffer := make([]byte, 1024)
 	read, _ = conn.Read(fileSizeBuffer)
 	if string(fileSizeBuffer[:read]) != "ok" {
@@ -197,17 +232,20 @@ func sendFile(fileName string, serverName string, serverPort string, part int) {
 		if byteCount%2 == part {
 			_, err := conn.Write([]byte{b})
 			if err != nil {
-				return
+				fmt.Println("Write failed")
+				os.Exit(1)
 			}
 		}
 		byteCount++
 	}
-
 	fmt.Printf("%s send successful\n", fileName)
-	conn.Close()
 }
 
-func receiveFile(fileName string, serverName string, serverPort string, part int) {
+func receiveFile(fileName string, serverName string, serverPort string, part int, wg *sync.WaitGroup) {
+	// function finished, notify to wait group
+	defer wg.Done()
+
+	fmt.Println("Request to server to get :" + fileName)
 	// connect to TCP server
 	conn, err := net.Dial("tcp", serverName+":"+serverPort)
 	if err != nil {
@@ -217,7 +255,11 @@ func receiveFile(fileName string, serverName string, serverPort string, part int
 
 	// prepare command string to send command
 	commandStr := "get"
-	conn.Write([]byte(commandStr))
+	_, err = conn.Write([]byte(commandStr))
+	if err != nil {
+		fmt.Println("Write failed")
+		os.Exit(1)
+	}
 	commandBuffer := make([]byte, 1024)
 	read, _ := conn.Read(commandBuffer)
 	// is server response is not ok
@@ -233,7 +275,11 @@ func receiveFile(fileName string, serverName string, serverPort string, part int
 	// join that strings
 	fileName = fmt.Sprintf("%s-part%d%s", fileName, part+1, fileExtension)
 	// request file Name
-	conn.Write([]byte(fileName))
+	_, err = conn.Write([]byte(fileName))
+	if err != nil {
+		fmt.Println("Write failed")
+		os.Exit(1)
+	}
 
 	// try to get fileSize
 	fileSizeBuffer := make([]byte, 1024)
@@ -241,10 +287,18 @@ func receiveFile(fileName string, serverName string, serverPort string, part int
 	fileSize, err := strconv.ParseInt(string(fileSizeBuffer[:read]), 10, 64)
 	if err != nil {
 		fmt.Println("fail to transfer file size:", err)
-		conn.Write([]byte("fail to transfer file size"))
-		return
+		_, err = conn.Write([]byte("fail to transfer file size"))
+		if err != nil {
+			fmt.Println("Write failed")
+			os.Exit(1)
+		}
+		os.Exit(1)
 	} else {
-		conn.Write([]byte("ok"))
+		_, err = conn.Write([]byte("ok"))
+		if err != nil {
+			fmt.Println("Write failed")
+			os.Exit(1)
+		}
 	}
 	// file create = 여기서 테스트할때는 이름을 바꿔야함
 	//file, err := os.Create(fileName)
@@ -253,7 +307,7 @@ func receiveFile(fileName string, serverName string, serverPort string, part int
 		fmt.Println("fail to create file:", err)
 		return
 	}
-	// 파일 내용 수신하여 저장
+	// received file contents and saved
 	var receivedBytes int64
 	buffer := make([]byte, 1024)
 	for {
@@ -266,18 +320,16 @@ func receiveFile(fileName string, serverName string, serverPort string, part int
 		}
 		receivedBytes += int64(n)
 
-		// 파일에 받은 내용 쓰기
+		// write to file from server contents
 		if _, err := file.Write(buffer[:n]); err != nil {
 			fmt.Println("fail to write file:", err)
 			return
 		}
 
-		// 파일이 전부 받아졌는지 확인
+		// check file is read finished
 		if receivedBytes >= fileSize {
-			file.Close()
 			break
 		}
 	}
-
 	fmt.Printf("%s file store sucessful!\n", fileName)
 }

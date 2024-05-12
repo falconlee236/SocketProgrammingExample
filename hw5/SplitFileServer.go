@@ -134,6 +134,7 @@ func main() {
 				// send file Size to server
 				conn.Write([]byte(size))
 			}
+			fmt.Println("Request from client to send :" + fileName)
 
 			statusBuffer := make([]byte, 1024)
 			read, _ = conn.Read(statusBuffer)
