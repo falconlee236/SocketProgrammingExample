@@ -162,6 +162,7 @@ func sendFile(fileName string, serverName string, serverPort string, part int, w
 		fmt.Println("fail to receive fileName")
 		os.Exit(1)
 	}
+	fmt.Println("Request to server to put :" + fileName)
 
 	// try to open file
 	originalFile, err := os.Open(fileName)
