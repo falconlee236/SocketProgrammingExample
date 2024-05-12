@@ -35,7 +35,81 @@ func main() {
 		sendFile(fileName, firstServerName, firstServerPort, 0)
 		sendFile(fileName, secondServerName, secondServerPort, 1)
 	} else if os.Args[1] == "get" { // get command case
+		receiveFile(fileName, firstServerName, firstServerPort, 0)
+		receiveFile(fileName, secondServerName, secondServerPort, 1)
 
+		// get file extension from fileName
+		fileExtension := filepath.Ext(fileName)
+		// get file name without extension from fileName
+		fileName = fileName[0 : len(fileName)-len(fileExtension)]
+		// file create
+		file, err := os.Create(fileName + "-merged" + fileExtension)
+		if err != nil {
+			fmt.Println("fail to create file:", err)
+			return
+		}
+		tmpFileName1 := fmt.Sprintf("%s-part%d%s", fileName, 1, fileExtension)
+		tmpFileName2 := fmt.Sprintf("%s-part%d%s", fileName, 2, fileExtension)
+
+		tmpFile1, _ := os.Open(tmpFileName1)
+		tmpFile2, _ := os.Open(tmpFileName2)
+		defer func(tmpFile1 *os.File) {
+			err := tmpFile1.Close()
+			if err != nil {
+				fmt.Println("File close error")
+			}
+			err = os.Remove(tmpFileName1)
+			if err != nil {
+				fmt.Println("File Remove error")
+			}
+		}(tmpFile1)
+		defer func(tmpFile2 *os.File) {
+			err := tmpFile2.Close()
+			if err != nil {
+				fmt.Println("File close error")
+			}
+			err = os.Remove(tmpFileName2)
+			if err != nil {
+				fmt.Println("File Remove error")
+			}
+		}(tmpFile2)
+
+		// 파일 내용 수신하여 저장
+		reader1 := bufio.NewReader(tmpFile1)
+		reader2 := bufio.NewReader(tmpFile2)
+		var byteCnt int64
+		var errorCnt int64
+		for {
+			if errorCnt == 2 {
+				break
+			}
+			if byteCnt%2 == 0 {
+				// get 1 byte from file
+				b, err := reader1.ReadByte()
+				if err != nil {
+					errorCnt++
+					continue // finish to reach file end
+				}
+				_, err = file.Write([]byte{b})
+				if err != nil {
+					return
+				}
+			} else {
+				// get 1 byte from file
+				b, err := reader2.ReadByte()
+				if err != nil {
+					errorCnt++
+					continue // finish to reach file end
+				}
+				_, err = file.Write([]byte{b})
+				if err != nil {
+					return
+				}
+			}
+			byteCnt++
+		}
+
+		fmt.Printf("%s file store sucessful!\n", fileName)
 	} else { // otherwise case
 		fmt.Println("Invalid argument.")
 	}
@@ -50,7 +124,6 @@ func sendFile(fileName string, serverName string, serverPort string, part int) {
 		fmt.Println("fail to connect server: ", err)
 		return
 	}
-	defer conn.Close()
 
 	// prepare command string to send command
 	commandStr := "put"
@@ -87,7 +160,7 @@ func sendFile(fileName string, serverName string, serverPort string, part int) {
 	// try to get file Stats
 	fileInfo, err := originalFile.Stat()
 	if err != nil {
-		fmt.Println("파일 정보 가져오기 실패:", err)
+		fmt.Println("fail to get file stat:", err)
 		return
 	}
 
@@ -123,7 +196,7 @@ func sendFile(fileName string, serverName string, serverPort string, part int) {
 	}
 
 	fmt.Printf("%s send successful\n", fileName)
-	return
+	conn.Close()
 }
 
 func receiveFile(fileName string, serverName string, serverPort string, part int) {
@@ -133,7 +206,6 @@ func receiveFile(fileName string, serverName string, serverPort string, part int
 		fmt.Println("fail to connect server: ", err)
 		return
 	}
-	defer conn.Close()
 
 	// prepare command string to send command
 	commandStr := "get"
@@ -142,45 +214,42 @@ func receiveFile(fileName string, serverName string, serverPort string, part int
 	read, _ := conn.Read(commandBuffer)
 	// is server response is not ok
 	if string(commandBuffer[:read]) != "ok" {
-		fmt.Println("fail to receive command")
+		fmt.Println(string(commandBuffer[:read]))
 		os.Exit(1)
 	}
 
-	fileNameBuffer := make([]byte, 1024)
-	read, err = conn.Read(fileNameBuffer)
-	if err != nil {
-		conn.Write([]byte("fail to read file"))
-	} else {
-		conn.Write([]byte("ok"))
-	}
-	fileName = string(fileNameBuffer[:read])
-	fmt.Println("Received file: ", fileName)
+	// get file extension from fileName
+	fileExtension := filepath.Ext(fileName)
+	// get file name without extension from fileName
+	fileName = fileName[0 : len(fileName)-len(fileExtension)]
+	// join that strings
+	fileName = fmt.Sprintf("%s-part%d%s", fileName, part+1, fileExtension)
+	// request file Name
+	conn.Write([]byte(fileName))
 
+	// try to get fileSize
 	fileSizeBuffer := make([]byte, 1024)
-	read, err = conn.Read(fileSizeBuffer)
-	if err != nil {
-		conn.Write([]byte("fail to read file"))
-	} else {
-		conn.Write([]byte("ok"))
-	}
+	read, _ = conn.Read(fileSizeBuffer)
 	fileSize, err := strconv.ParseInt(string(fileSizeBuffer[:read]), 10, 64)
 	if err != nil {
 		fmt.Println("fail to transfer file size:", err)
+		conn.Write([]byte("fail to transfer file size"))
 		return
+	} else {
+		conn.Write([]byte("ok"))
 	}
-
 	// 파일 생성
 	file, err := os.Create(fileName)
 	if err != nil {
 		fmt.Println("fail to create file:", err)
 		return
 	}
-
 	// 파일 내용 수신하여 저장
 	var receivedBytes int64
 	buffer := make([]byte, 1024)
 	for {
 		n, err := conn.Read(buffer)
+		fmt.Println(fileName)
 		if err != nil {
 			if err != io.EOF {
 				fmt.Println("fail to read file:", err)

@@ -6,6 +6,7 @@ SplitFileServer.go
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"net"
@@ -54,6 +55,7 @@ func main() {
 			conn.Write([]byte("ok"))
 		}
 		commandName := string(commandBuffer[:read])
+
 		if commandName == "put" {
 			fileNameBuffer := make([]byte, 1024)
 			read, err = conn.Read(fileNameBuffer)
@@ -112,6 +114,51 @@ func main() {
 			}
 
 			fmt.Printf("%s file store sucessful!\n", fileName)
+		} else if commandName == "get" {
+			// get fileName
+			fileNameBuffer := make([]byte, 1024)
+			read, _ = conn.Read(fileNameBuffer)
+			fileName := string(fileNameBuffer[:read])
+			// try to open file
+			originalFile, err := os.Open(fileName)
+			// error occur
+			if err != nil {
+				conn.Write([]byte("fail to open file"))
+			} else {
+				// try to get file Stats
+				fileInfo, err := originalFile.Stat()
+				if err != nil {
+					fmt.Println("fail to get file stat:", err)
+					return
+				}
+				// convert file Size string to Integer
+				size := strconv.FormatInt(fileInfo.Size(), 10)
+				// send file Size to server
+				conn.Write([]byte(size))
+			}
+
+			statusBuffer := make([]byte, 1024)
+			read, _ = conn.Read(statusBuffer)
+			if string(statusBuffer[:read]) != "ok" {
+				continue
+			}
+
+			// get Buffer from file
+			reader := bufio.NewReader(originalFile)
+			for {
+				// get 1 byte from file
+				b, err := reader.ReadByte()
+				if err != nil {
+					break // finish to reach file end
+				}
+				_, err = conn.Write([]byte{b})
+				if err != nil {
+					return
+				}
+			}
+			fmt.Printf("%s send successful\n", fileName)
+		} else {
+			fmt.Println("unknown command: ", commandName)
 		}
 	}
 }
