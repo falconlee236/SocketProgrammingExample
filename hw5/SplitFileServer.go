@@ -45,6 +45,7 @@ func main() {
 			continue
 		}
 
+		// get command from client
 		commandBuffer := make([]byte, 1024)
 		read, err := conn.Read(commandBuffer)
 		if err != nil {
@@ -62,7 +63,9 @@ func main() {
 		}
 		commandName := string(commandBuffer[:read])
 
+		// put case
 		if commandName == "put" {
+			// get file Name from client
 			fileNameBuffer := make([]byte, 1024)
 			read, err = conn.Read(fileNameBuffer)
 			if err != nil {
@@ -81,6 +84,7 @@ func main() {
 			fileName := string(fileNameBuffer[:read])
 			fmt.Println("Received file: ", fileName)
 
+			// get file size from client
 			fileSizeBuffer := make([]byte, 1024)
 			read, err = conn.Read(fileSizeBuffer)
 			if err != nil {
@@ -96,20 +100,21 @@ func main() {
 					continue
 				}
 			}
+			// translate string to int
 			fileSize, err := strconv.ParseInt(string(fileSizeBuffer[:read]), 10, 64)
 			if err != nil {
 				fmt.Println("fail to transfer file size:", err)
 				continue
 			}
 
-			// 파일 생성
+			// create file
 			file, err := os.Create(fileName)
 			if err != nil {
 				fmt.Println("fail to create file:", err)
 				continue
 			}
 
-			// 파일 내용 수신하여 저장
+			// save file contents
 			var receivedBytes int64
 			buffer := make([]byte, 1024)
 			for {
@@ -122,13 +127,13 @@ func main() {
 				}
 				receivedBytes += int64(n)
 
-				// 파일에 받은 내용 쓰기
+				// write content to file
 				if _, err := file.Write(buffer[:n]); err != nil {
 					fmt.Println("fail to write file:", err)
 					break
 				}
 
-				// 파일이 전부 받아졌는지 확인
+				// check all content is done
 				if receivedBytes >= fileSize {
 					break
 				}
@@ -140,7 +145,7 @@ func main() {
 				fmt.Println("file closed error")
 				continue
 			}
-		} else if commandName == "get" {
+		} else if commandName == "get" { // get case
 			// get fileName
 			fileNameBuffer := make([]byte, 1024)
 			read, _ = conn.Read(fileNameBuffer)
