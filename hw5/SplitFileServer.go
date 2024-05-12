@@ -15,14 +15,12 @@ import (
 )
 
 func main() {
-	//if len(os.Args) != 2 {
-	//	fmt.Println("This program only accepts one argument")
-	//	os.Exit(1)
-	//}
-	//serverPort := os.Args[1]
-
-	// server Port
-	serverPort := "20532"
+	if len(os.Args) != 2 {
+		fmt.Println("This program only accepts one argument")
+		os.Exit(1)
+	}
+	//server Port
+	serverPort := os.Args[1]
 
 	// listen from client request
 	listener, err := net.Listen("tcp", ":"+serverPort)

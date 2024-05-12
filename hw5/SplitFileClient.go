@@ -26,41 +26,47 @@ func main() {
 
 	// server Info hardcoding
 	firstServerName := "127.0.0.1"
-	firstServerPort := "20532"
+	firstServerPort := "40532"
 	secondServerName := "127.0.0.1"
-	secondServerPort := "20532"
+	secondServerPort := "50532"
 
 	// put command case
 	if commandName == "put" {
+		// sendFile odd byte
 		sendFile(fileName, firstServerName, firstServerPort, 0)
+		// sendFile even byte
 		sendFile(fileName, secondServerName, secondServerPort, 1)
 	} else if os.Args[1] == "get" { // get command case
+		// receiveFile odd byte
 		receiveFile(fileName, firstServerName, firstServerPort, 0)
+		// receiveFile even byte
 		receiveFile(fileName, secondServerName, secondServerPort, 1)
 
 		// get file extension from fileName
 		fileExtension := filepath.Ext(fileName)
 		// get file name without extension from fileName
 		fileName = fileName[0 : len(fileName)-len(fileExtension)]
-		// file create
+		// merged file create
 		file, err := os.Create(fileName + "-merged" + fileExtension)
 		if err != nil {
 			fmt.Println("fail to create file:", err)
-			return
+			os.Exit(1)
 		}
-		tmpFileName1 := fmt.Sprintf("%s-part%d%s", fileName, 1, fileExtension)
-		tmpFileName2 := fmt.Sprintf("%s-part%d%s", fileName, 2, fileExtension)
-
+		tmpFileName1 := fmt.Sprintf("%s-part%d%stmp%s", fileName, 1, fileExtension, fileExtension)
+		tmpFileName2 := fmt.Sprintf("%s-part%d%stmp%s", fileName, 2, fileExtension, fileExtension)
 		tmpFile1, _ := os.Open(tmpFileName1)
 		tmpFile2, _ := os.Open(tmpFileName2)
+		// set close Function and delete tmp file
 		defer func(tmpFile1 *os.File) {
 			err := tmpFile1.Close()
 			if err != nil {
 				fmt.Println("File close error")
+				os.Exit(1)
 			}
 			err = os.Remove(tmpFileName1)
 			if err != nil {
 				fmt.Println("File Remove error")
+				os.Exit(1)
 			}
 		}(tmpFile1)
 		defer func(tmpFile2 *os.File) {
@@ -74,20 +80,22 @@ func main() {
 			}
 		}(tmpFile2)
 
-		// 파일 내용 수신하여 저장
+		// set Buffer from each tmp file
 		reader1 := bufio.NewReader(tmpFile1)
 		reader2 := bufio.NewReader(tmpFile2)
+		// check even, odd
 		var byteCnt int64
-		var errorCnt int64
+		var finishCnt int64
 		for {
-			if errorCnt == 2 {
+			// all file is finished, exit
+			if finishCnt == 2 {
 				break
 			}
 			if byteCnt%2 == 0 {
-				// get 1 byte from file
+				// get 1 byte from odd file
 				b, err := reader1.ReadByte()
 				if err != nil {
-					errorCnt++
+					finishCnt++
 					continue // finish to reach file end
 				}
 				_, err = file.Write([]byte{b})
@@ -95,10 +103,10 @@ func main() {
 					return
 				}
 			} else {
-				// get 1 byte from file
+				// get 1 byte from even file
 				b, err := reader2.ReadByte()
 				if err != nil {
-					errorCnt++
+					finishCnt++
 					continue // finish to reach file end
 				}
 				_, err = file.Write([]byte{b})
@@ -109,7 +117,7 @@ func main() {
 			byteCnt++
 		}
 
-		fmt.Printf("%s file store sucessful!\n", fileName)
+		fmt.Printf("%s%s file merge sucessful!\n", fileName, fileExtension)
 	} else { // otherwise case
 		fmt.Println("Invalid argument.")
 	}
@@ -238,8 +246,9 @@ func receiveFile(fileName string, serverName string, serverPort string, part int
 	} else {
 		conn.Write([]byte("ok"))
 	}
-	// 파일 생성
-	file, err := os.Create(fileName)
+	// file create = 여기서 테스트할때는 이름을 바꿔야함
+	//file, err := os.Create(fileName)
+	file, err := os.Create(fileName + "tmp" + filepath.Ext(fileName))
 	if err != nil {
 		fmt.Println("fail to create file:", err)
 		return
@@ -249,7 +258,6 @@ func receiveFile(fileName string, serverName string, serverPort string, part int
 	buffer := make([]byte, 1024)
 	for {
 		n, err := conn.Read(buffer)
-		fmt.Println(fileName)
 		if err != nil {
 			if err != io.EOF {
 				fmt.Println("fail to read file:", err)
