@@ -48,9 +48,17 @@ func main() {
 		commandBuffer := make([]byte, 1024)
 		read, err := conn.Read(commandBuffer)
 		if err != nil {
-			conn.Write([]byte("fail to read file"))
+			_, err = conn.Write([]byte("fail to read file"))
+			if err != nil {
+				fmt.Println("Write failed")
+				continue
+			}
 		} else {
-			conn.Write([]byte("ok"))
+			_, err = conn.Write([]byte("ok"))
+			if err != nil {
+				fmt.Println("Write failed")
+				continue
+			}
 		}
 		commandName := string(commandBuffer[:read])
 
@@ -58,9 +66,17 @@ func main() {
 			fileNameBuffer := make([]byte, 1024)
 			read, err = conn.Read(fileNameBuffer)
 			if err != nil {
-				conn.Write([]byte("fail to read file"))
+				_, err = conn.Write([]byte("fail to read file"))
+				if err != nil {
+					fmt.Println("Write failed")
+					continue
+				}
 			} else {
-				conn.Write([]byte("ok"))
+				_, err = conn.Write([]byte("ok"))
+				if err != nil {
+					fmt.Println("Write failed")
+					continue
+				}
 			}
 			fileName := string(fileNameBuffer[:read])
 			fmt.Println("Received file: ", fileName)
@@ -68,21 +84,29 @@ func main() {
 			fileSizeBuffer := make([]byte, 1024)
 			read, err = conn.Read(fileSizeBuffer)
 			if err != nil {
-				conn.Write([]byte("fail to read file"))
+				_, err = conn.Write([]byte("fail to read file"))
+				if err != nil {
+					fmt.Println("Write failed")
+					continue
+				}
 			} else {
-				conn.Write([]byte("ok"))
+				_, err = conn.Write([]byte("ok"))
+				if err != nil {
+					fmt.Println("Write failed")
+					continue
+				}
 			}
 			fileSize, err := strconv.ParseInt(string(fileSizeBuffer[:read]), 10, 64)
 			if err != nil {
 				fmt.Println("fail to transfer file size:", err)
-				return
+				continue
 			}
 
 			// 파일 생성
 			file, err := os.Create(fileName)
 			if err != nil {
 				fmt.Println("fail to create file:", err)
-				return
+				continue
 			}
 
 			// 파일 내용 수신하여 저장
@@ -101,17 +125,21 @@ func main() {
 				// 파일에 받은 내용 쓰기
 				if _, err := file.Write(buffer[:n]); err != nil {
 					fmt.Println("fail to write file:", err)
-					return
+					break
 				}
 
 				// 파일이 전부 받아졌는지 확인
 				if receivedBytes >= fileSize {
-					file.Close()
 					break
 				}
 			}
 
 			fmt.Printf("%s file store sucessful!\n", fileName)
+			err = file.Close()
+			if err != nil {
+				fmt.Println("file closed error")
+				continue
+			}
 		} else if commandName == "get" {
 			// get fileName
 			fileNameBuffer := make([]byte, 1024)
@@ -121,7 +149,11 @@ func main() {
 			originalFile, err := os.Open(fileName)
 			// error occur
 			if err != nil {
-				conn.Write([]byte("fail to open file"))
+				_, err = conn.Write([]byte("fail to open file"))
+				if err != nil {
+					fmt.Println("Write failed")
+					continue
+				}
 			} else {
 				// try to get file Stats
 				fileInfo, err := originalFile.Stat()
@@ -132,7 +164,11 @@ func main() {
 				// convert file Size string to Integer
 				size := strconv.FormatInt(fileInfo.Size(), 10)
 				// send file Size to server
-				conn.Write([]byte(size))
+				_, err = conn.Write([]byte(size))
+				if err != nil {
+					fmt.Println("Write failed")
+					continue
+				}
 			}
 			fmt.Println("Request from client to send :" + fileName)
 
@@ -152,7 +188,8 @@ func main() {
 				}
 				_, err = conn.Write([]byte{b})
 				if err != nil {
-					return
+					fmt.Println("Write Error")
+					break
 				}
 			}
 			fmt.Printf("%s send successful\n", fileName)
