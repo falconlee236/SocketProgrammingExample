@@ -150,6 +150,12 @@ int main(int ac, char **av){
             char buffer[BUFFER_SIZE] = {0, };
             // input client msg, delimiter = "\n"
             fgets(buffer, sizeof (buffer), stdin);
+            if (buffer[0] == '\n')
+                continue;
+            if (buffer[0] == '\\' && buffer[1] == '\n'){
+                printf("Invalid command\n");
+                continue;
+            }
             printf("\n");
             // check command, command case
             if (buffer[0] == '\\'){

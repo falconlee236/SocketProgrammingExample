@@ -190,9 +190,13 @@ int main(void){
                                 // find dst fd in map
                                 char dst_fd = find(client_map, command_split[1]);
                                 // secret, except error
-                                if (len != 3 || (dst_fd == -1 && command_type == 2)){
+                                if (len != 3 || dst_fd == -1){
                                     char* type_str = command_type == 2 ? "\\secret" : "\\except";
                                     printf("invalid command: %s %s %s\n", type_str, command_split[1], command_split[2]);
+                                    if (dst_fd == -1){
+                                        sprintf(sendMsg, "%s doesn't exist in the chat room.\n", command_split[1]);
+                                        write(fd, sendMsg, sizeof(sendMsg));
+                                    }
                                     continue;
                                 } else {
                                     // prepare special message
