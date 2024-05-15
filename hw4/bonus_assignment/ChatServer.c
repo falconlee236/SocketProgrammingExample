@@ -149,6 +149,8 @@ int main(void){
                     char buffer[BUFFER_SIZE] = {0, };
                     memset(&buffer, 0, sizeof (buffer));
                     ssize_t str_len = read(fd, buffer, BUFFER_SIZE);
+		    if(str_len == 1 && buffer[0] == '\n')
+			    continue;
                     if(str_len == 0){ // disconnect request
                         char sendMsg[BUFFER_SIZE] = {0, };
                         FD_CLR(fd, &reads); //change that fd to 0
