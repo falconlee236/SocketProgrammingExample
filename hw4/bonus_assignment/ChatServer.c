@@ -77,13 +77,6 @@ int main(void){
         perror("listen error");
         exit(1);
     }
-    struct sockaddr_in local_addr;
-    socklen_t addr_len = sizeof(local_addr);
-    if (getsockname(serv_sock, (struct sockaddr*)&local_addr, &addr_len) == -1) {
-        perror("getsockname error");
-        exit(1);
-    }
-    char* server_ip = inet_ntoa(local_addr.sin_addr);
     printf("Server is ready to receive on port %d\n", PORT);
 
     fd_set reads, temps;
@@ -139,10 +132,18 @@ int main(void){
                         if(fd_max < clnt_sock){ // set max fd to that client fd
                             fd_max = clnt_sock;
                         }
+						 struct sockaddr_in local_addr;
+    					socklen_t addr_len = sizeof(local_addr);
+    					if (getsockname(clnt_sock, (struct sockaddr*)&local_addr, &addr_len) == -1) {
+        					perror("getsockname error");
+        					exit(1);
+    					}
+    					char* server_ip = inet_ntoa(local_addr.sin_addr);
+
                         sprintf(nickname_res_buffer, "%d\n[welcome %s to CAU net-class chat room at %s:%d.]\n[There are %d users in the room.]\n",
                                                      status_code, nickname_buffer, server_ip, PORT, total_client_num);
                         printf("[%s has joined from %s:%d.]\n"
-                               "[There are %d users in room.]\n\n", nickname_buffer, client_ip, client_port, total_client_num);
+                               "[There are %d users in room.]\n\n", nickname_buffer, client_arr[clnt_sock].ip, client_port, total_client_num);
                     }
                     write(clnt_sock, nickname_res_buffer, strlen(nickname_res_buffer));
                 } else{ // already connected client
