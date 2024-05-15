@@ -62,7 +62,7 @@ fn main() {
                             *total_client_num += 1;
                             // insert map to client socket
                             client_map.insert(nickname.clone(), socket.try_clone().expect("failed to clone client"));
-                            format!("{}\n[welcome {} to CAU net-class chat room at {}.]\n[There are {} users in the room.]", status_code, &nickname, server_socket.local_addr().expect("failed to get address"), total_client_num)
+                            format!("{}\n[welcome {} to CAU net-class chat room at {}.]\n[There are {} users in the room.]", status_code, &nickname, socket.local_addr().expect("failed to get address"), total_client_num)
                         }
                     };
 
