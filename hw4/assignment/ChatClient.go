@@ -35,7 +35,7 @@ func main() {
 		"quit":   0x05,
 	}
 	// server info
-	serverName := "127.0.0.1"
+	serverName := "nsl5.cau.ac.kr"
 	serverPort := "20532"
 
 	// connect to server
@@ -103,6 +103,9 @@ func main() {
 	for {
 		// input msg from user
 		msgInput, _ := bufio.NewReader(os.Stdin).ReadString('\n')
+		if len(msgInput) == 1 && msgInput[0] == '\n'{
+			continue
+		}
 		// find command index
 		commandIdx := strings.IndexByte(msgInput, '\\')
 		// if command

@@ -18,7 +18,7 @@
 
 #define BUFFER_SIZE 1024
 #define NICKNAME_SIZE 40
-#define SERVER_IP "127.0.0.1" // server ip
+#define SERVER_IP "165.194.35.205" // server ip
 #define SERVER_PORT 20532 // server port
 #define SEC_TO_NSEC(t) (((t).tv_sec * 1000000000) + (t).tv_nsec) // second to nanosecond
 

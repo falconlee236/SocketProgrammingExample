@@ -136,15 +136,7 @@ fn main() {
                                                 if command_type == 3 {
                                                     match client_map.lock().unwrap().get(target_nickname) {
                                                         // cannot find target nickname in client map
-                                                        Some(_) => {
-                                                            let msg = format!("from: {}> {}\n", &nickname, target_msg);
-                                                            for (other_nickname, stream) in client_map.lock().unwrap().iter_mut(){
-                                                                // send msg excpet target nickname
-                                                                if other_nickname != target_nickname {
-                                                                    if stream.write(msg.as_bytes()).is_err() {}
-                                                                }
-                                                            }
-                                                        }
+                                                        Some(_) => {}
                                                         None => {
                                                             println!("Invalid command: \\except");
                                                             let msg = format!("[{} is not in the chat room.]\n", target_nickname);
@@ -152,6 +144,14 @@ fn main() {
                                                             continue;
                                                         },
                                                     }
+													let msg = format!("from: {}> {}\n", &nickname, target_msg);
+                                                    for (other_nickname, stream) in client_map.lock().unwrap().iter_mut(){
+                                                        // send msg excpet target nickname
+                                                       	if other_nickname != target_nickname {
+                                                        	if stream.write(msg.as_bytes()).is_err() {}
+                                                        }
+                                                    }
+
                                                 }
 
                                                 // text filtering

@@ -16,7 +16,7 @@ use ctrlc::set_handler;
 
 const MSG_SIZE: usize = 1024;
 // server info
-const SERVER_IP: &str = "127.0.0.1";
+const SERVER_IP: &str = "nsl5.cau.ac.kr";
 const SERVER_PORT: usize = 20532;
 
 fn main() {
