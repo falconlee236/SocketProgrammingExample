@@ -22,7 +22,7 @@ fn main() {
     }).expect("Error setting Ctrl+C handler");
 
     // get server address
-    let server_address = format!("127.0.0.1{}{}", &String::from(":"), SERVER_PORT);
+    let server_address = format!("0.0.0.0{}{}", &String::from(":"), SERVER_PORT);
 
     // create server socket
     let server_socket = TcpListener::bind(server_address).expect("Lister failed to bind");
