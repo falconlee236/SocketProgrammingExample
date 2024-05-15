@@ -125,6 +125,8 @@ fn main() {
                                                         // cannot find target nickname in client map
                                                         None => {
                                                             println!("Invalid command: \\secret");
+                                                            let msg = format!("[{} is not in the chat room.]\n", target_nickname);
+                                                            if socket.write(msg.as_bytes()).is_err() {}
                                                             continue;
                                                         },
                                                     }
@@ -132,12 +134,23 @@ fn main() {
 
                                                 // except command
                                                 if command_type == 3 {
-                                                    let msg = format!("from: {}> {}\n", &nickname, target_msg);
-                                                    for (other_nickname, stream) in client_map.lock().unwrap().iter_mut(){
-                                                        // send msg excpet target nickname
-                                                        if other_nickname != target_nickname {
-                                                            if stream.write(msg.as_bytes()).is_err() {}
+                                                    match client_map.lock().unwrap().get(target_nickname) {
+                                                        // cannot find target nickname in client map
+                                                        Some(_) => {
+                                                            let msg = format!("from: {}> {}\n", &nickname, target_msg);
+                                                            for (other_nickname, stream) in client_map.lock().unwrap().iter_mut(){
+                                                                // send msg excpet target nickname
+                                                                if other_nickname != target_nickname {
+                                                                    if stream.write(msg.as_bytes()).is_err() {}
+                                                                }
+                                                            }
                                                         }
+                                                        None => {
+                                                            println!("Invalid command: \\except");
+                                                            let msg = format!("[{} is not in the chat room.]\n", target_nickname);
+                                                            if socket.write(msg.as_bytes()).is_err() {}
+                                                            continue;
+                                                        },
                                                     }
                                                 }
 
