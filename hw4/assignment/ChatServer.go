@@ -158,6 +158,8 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 				// if that nickname does not exist in map
 				if !isExist {
 					fmt.Println("Invalid command: \\secret " + string(msgRes[1:]))
+					errStr := fmt.Sprintf("%s doesn't exist in the chat room.\n", commandNickname)
+					conn.Write([]byte(errStr))
 					continue
 				}
 				sendMsg := fmt.Sprintf("from: %s> %s\n", nicknameStr, commandMsg)
@@ -173,6 +175,15 @@ func TCPClientHandler(conn net.Conn, totalClientNum *int, clientMap *map[string]
 					return
 				}
 			} else if msgRes[0] == 3 { // sxcept command
+				// get nickname connection info
+				_, isExist := (*clientMap)[commandNickname]
+				// if that nickname does not exist in map
+				if !isExist {
+					fmt.Println("Invalid command: \\secret " + string(msgRes[1:]))
+					errStr := fmt.Sprintf("%s doesn't exist in the chat room.\n", commandNickname)
+					conn.Write([]byte(errStr))
+					continue
+				}
 				for nickname, otherConn := range *clientMap {
 					// find except nickname, don't send msg to that nickname
 					if nickname == commandNickname {
