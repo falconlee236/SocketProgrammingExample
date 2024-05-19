@@ -1,8 +1,11 @@
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -30,6 +33,7 @@ class SplitFileServer {
 				BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 				PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 				InputStream is = clientSocket.getInputStream();
+				OutputStream os = clientSocket.getOutputStream();
 				
 				// get command from client
 				String commandName = in.readLine();
@@ -60,6 +64,32 @@ class SplitFileServer {
 						System.out.println(fileName + " file store sucessful!");
 					}
 					case "get" -> {
+						String fileName = in.readLine();
+						File srcFile = new File(fileName);
+						if (srcFile.exists() && srcFile.isFile()){
+							long size = srcFile.length();
+							out.println(Long.toString(size));
+						} else {
+							out.println("fail to get file Size");
+							continue;
+						}
+						System.out.println("Request from client to send: " + fileName);
+
+						String statusRes = in.readLine();
+						if (!statusRes.equals("ok")){
+							continue;
+						}
+						
+						try (FileInputStream fis = new FileInputStream(srcFile)){
+							byte[] b = new byte[1];
+							while (fis.read(b) > 0){
+								os.write(b);
+							}
+							System.out.println(fileName + " send successful");
+						} catch (Exception e) {
+							System.out.println("read Error!");
+							continue;
+						}
 						
 					}
 					default -> System.out.println("Invalid command");

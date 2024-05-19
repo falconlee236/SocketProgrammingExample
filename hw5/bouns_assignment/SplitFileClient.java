@@ -187,7 +187,7 @@ class SplitFileClient {
 			// get file Object
 			// file create = 제출할때는 tmp 빼야함.
 			// File tmpFile = new File(fileName);
-			File tmpFile = new File(fileName + "tmp" + fileExtension);
+			File tmpFile = new File(fileName + "-tmp." + fileExtension);
 			try (FileOutputStream fos = new FileOutputStream(tmpFile)){
 				long receivedBytes = 0;
 				byte[] buffer = new byte[1024];
