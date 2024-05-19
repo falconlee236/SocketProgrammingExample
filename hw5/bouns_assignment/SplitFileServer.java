@@ -35,22 +35,23 @@ class SplitFileServer {
 				String commandName = in.readLine();
 				out.println("ok");
 				
-				if (commandName.equals("put")){
-					String fileName = in.readLine();
-					out.println("ok");
-					
-					String fileSizeBuffer = in.readLine();
-					out.println("ok");
-					try (
-						FileOutputStream fos = new FileOutputStream(fileName)
+				switch (commandName){
+					case "put" -> {
+						String fileName = in.readLine();
+						out.println("ok");
+										
+						String fileSizeBuffer = in.readLine();
+						out.println("ok");
+						try (
+							FileOutputStream fos = new FileOutputStream(fileName)
 						){
 							int fileSize = Integer.parseInt(fileSizeBuffer);
 							long receivedBytes = 0;
 							byte[] buffer = new byte[1024];
 							int bytesRead;
-							while (receivedBytes < fileSize && (bytesRead = is.read(buffer)) != -1) { 
+							while (receivedBytes < fileSize && (bytesRead = is.read(buffer)) != -1) {
 								fos.write(buffer, 0, bytesRead);
-								receivedBytes += bytesRead;	
+								receivedBytes += bytesRead;
 							}
 						} catch (Exception e) {
 							System.out.println("fail to create file");
@@ -58,9 +59,14 @@ class SplitFileServer {
 						}
 						System.out.println(fileName + " file store sucessful!");
 					}
+					case "get" -> {
+						
+					}
+					default -> System.out.println("Invalid command");
 				}
-			} catch (Exception e) {
-				System.out.println("Error!");
+			}
+		} catch (Exception e) {
+			System.out.println("Error!");
 		}
 	}
 }
