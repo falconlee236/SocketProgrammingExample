@@ -1,0 +1,16 @@
+[package]
+name = "rust_bonus_assignment"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "rs_split_client"
+path = "src/SplitFileClient.rs"
+
+[[bin]]
+name = "rs_split_server"
+path = "src/SplitFileServer.rs"
+
+[dependencies]
