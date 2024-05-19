@@ -27,6 +27,7 @@ class SplitFileClient {
 		// get argument from system args
 		String commandName = args[0];
 		String fileName = args[1];
+		final String threadFileName = fileName;
 
 		// server Info hardcoding
 		String firstServerName = "127.0.0.1";
@@ -40,14 +41,14 @@ class SplitFileClient {
 		if (commandName.equals("put")){
 			Runnable task1 = () -> {
 				try {
-					sendFile(fileName, firstServerName, firstServerPort, 0);		
+					sendFile(threadFileName, firstServerName, firstServerPort, 0);		
 				} finally {
 					latch.countDown();
 				}
 			};
 			Runnable task2 = () -> {
 				try {
-					sendFile(fileName, secondServerName, secondServerPort, 1);
+					sendFile(threadFileName, secondServerName, secondServerPort, 1);
 				} finally {
 					latch.countDown();
 				}
@@ -66,14 +67,14 @@ class SplitFileClient {
 		else if (commandName.equals("get")){
 			Runnable task1 = () -> {
 				try {
-					recieveFile(fileName, firstServerName, firstServerPort, 0);		
+					recieveFile(threadFileName, firstServerName, firstServerPort, 0);		
 				} finally {
 					latch.countDown();
 				}
 			};
 			Runnable task2 = () -> {
 				try {
-					recieveFile(fileName, secondServerName, secondServerPort, 1);
+					recieveFile(threadFileName, secondServerName, secondServerPort, 1);
 				} finally {
 					latch.countDown();
 				}
@@ -88,6 +89,57 @@ class SplitFileClient {
                 Thread.currentThread().interrupt();
                 System.out.println("Thread interrupted");
             }
+
+			int idx = fileName.lastIndexOf('.');
+			String fileExtension = fileName.substring(idx);
+			fileName = fileName.substring(0, idx);
+			String outputFileName = String.format("%s-merged%s", fileName, fileExtension);
+			String tmpFileName1 = String.format("%s-part%d%stmp%s", fileName, 1, fileExtension, fileExtension);
+			String tmpFileName2 = String.format("%s-part%d%stmp%s", fileName, 2, fileExtension, fileExtension);
+			File tmpFile1 = new File(tmpFileName1);
+			File tmpFile2 = new File(tmpFileName2);
+			try (
+				FileOutputStream fos = new FileOutputStream(outputFileName);
+				FileInputStream fis1 = new FileInputStream(tmpFile1);
+				FileInputStream fis2 = new FileInputStream(tmpFile2)
+			){
+				long byteCnt = 0;
+				int finishCnt = 0;
+				while (true){
+					if (finishCnt == 2)
+						break;
+					if (byteCnt % 2 == 0){
+						byte[] b = new byte[1];
+						if (fis1.read(b) <= 0){
+							finishCnt++;
+							continue;
+						}
+						fos.write(b);
+					} else {
+						byte[] b = new byte[1];
+						if (fis2.read(b) <= 0){
+							finishCnt++;
+							continue;
+						}
+						fos.write(b);
+					}
+					byteCnt++;
+				}
+				System.out.println(threadFileName + "file merge successful!");
+			} catch (Exception e) {
+				System.out.println("File Open Error");
+				System.exit(1);
+			}
+			if (tmpFile1.exists() && tmpFile1.delete()){
+				System.out.println("delete Tempfile1 successful");
+			} else {
+				System.out.println("delete TempFile1 failed");
+			}
+			if (tmpFile2.exists() && tmpFile2.delete()){
+				System.out.println("delete Tempfile2 successful");
+			} else {
+				System.out.println("delete TempFile2 failed");
+			}
 		}
 	}
 
@@ -113,9 +165,9 @@ class SplitFileClient {
 			File srcFile = new File(fileName);
 
 			int idx = fileName.lastIndexOf('.');
-			String fileExtension = fileName.substring(idx+1);
+			String fileExtension = fileName.substring(idx);
 			fileName = fileName.substring(0, idx);
-			fileName = String.format("%s-part%d.%s", fileName, part + 1, fileExtension);
+			fileName = String.format("%s-part%d%s", fileName, part + 1, fileExtension);
 			out.println(fileName);
 			// get from server
 			String fileNameRes = in.readLine();
@@ -174,9 +226,9 @@ class SplitFileClient {
 			}
 			
 			int idx = fileName.lastIndexOf('.');
-			String fileExtension = fileName.substring(idx+1);
+			String fileExtension = fileName.substring(idx);
 			fileName = fileName.substring(0, idx);
-			fileName = String.format("%s-part%d.%s", fileName, part + 1, fileExtension);
+			fileName = String.format("%s-part%d%s", fileName, part + 1, fileExtension);
 			out.println(fileName);
 			// get file Size from server
 			String fileSizeBuffer = in.readLine();
@@ -185,9 +237,7 @@ class SplitFileClient {
 			
 			
 			// get file Object
-			// file create = 제출할때는 tmp 빼야함.
-			// File tmpFile = new File(fileName);
-			File tmpFile = new File(fileName + "-tmp." + fileExtension);
+			File tmpFile = new File(fileName + "tmp" + fileExtension);
 			try (FileOutputStream fos = new FileOutputStream(tmpFile)){
 				long receivedBytes = 0;
 				byte[] buffer = new byte[1024];
