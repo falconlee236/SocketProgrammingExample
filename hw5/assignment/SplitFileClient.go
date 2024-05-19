@@ -301,8 +301,7 @@ func receiveFile(fileName string, serverName string, serverPort string, part int
 			os.Exit(1)
 		}
 	}
-	// file create = 여기서 테스트할때는 이름을 바꿔야함
-	//file, err := os.Create(fileName)
+
 	file, err := os.Create(fileName + "tmp" + filepath.Ext(fileName))
 	if err != nil {
 		fmt.Println("fail to create file:", err)
