@@ -48,12 +48,15 @@ class SplitFileServer {
 						String fileName = new String(fileNameBuffer, 0, read);
 						os.write("ok".getBytes());
 										
-						String fileSizeBuffer = in.readLine();
-						out.println("ok");
+
+						byte[] fileSizeBuffer = new byte[1024];
+						read = is.read(fileSizeBuffer);
+						String fileSizeString = new String(fileSizeBuffer, 0, read);
+						os.write("ok".getBytes());
 						try (
 							FileOutputStream fos = new FileOutputStream(fileName)
 						){
-							int fileSize = Integer.parseInt(fileSizeBuffer);
+							int fileSize = Integer.parseInt(fileSizeString);
 							long receivedBytes = 0;
 							byte[] buffer = new byte[1024];
 							int bytesRead;

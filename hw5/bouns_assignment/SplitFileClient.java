@@ -147,8 +147,6 @@ class SplitFileClient {
 	private static void sendFile(String fileName, String serverName, String serverPort, int part){
 		try (
 			Socket socket = new Socket(serverName, Integer.parseInt(serverPort));
-			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			OutputStream os = socket.getOutputStream();
 			InputStream is = socket.getInputStream();
 		) {
@@ -186,8 +184,10 @@ class SplitFileClient {
 
 			if (srcFile.exists() && srcFile.isFile()){
 				long size = srcFile.length();
-				out.println(Long.toString(size));
-				String fileSizeRes = in.readLine();
+				os.write(Long.toString(size).getBytes());
+				byte[] fileSizeResBuffer = new byte[1024];
+				read = is.read(fileSizeResBuffer);
+				String fileSizeRes = new String(fileSizeResBuffer, 0, read);
 				if (!fileSizeRes.equals("ok")){
 					System.out.println("fail to receive fileSize");
 					throw new IOException();
