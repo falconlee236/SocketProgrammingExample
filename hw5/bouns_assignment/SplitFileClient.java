@@ -11,6 +11,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 class SplitFileClient {
 	public static void main(String[] args) {
@@ -29,10 +32,34 @@ class SplitFileClient {
 		String secondServerName = "127.0.0.1";
 		String secondServerPort = "50532";
 
+		ExecutorService executor = Executors.newFixedThreadPool(2);
+		CountDownLatch latch = new CountDownLatch(2);
 		// put command case
 		if (commandName.equals("put")){
-			sendFile(fileName, firstServerName, firstServerPort, 0);
-			sendFile(fileName, secondServerName, secondServerPort, 1);
+			Runnable task1 = () -> {
+				try {
+					sendFile(fileName, firstServerName, firstServerPort, 0);		
+				} finally {
+					latch.countDown();
+				}
+			};
+			Runnable task2 = () -> {
+				try {
+					sendFile(fileName, secondServerName, secondServerPort, 1);
+				} finally {
+					latch.countDown();
+				}
+			};
+			executor.submit(task1);
+			executor.submit(task2);
+			// Wait for all tasks to complete
+            try {
+                latch.await();  // Wait until the count reaches 0
+                executor.shutdown();  // Shutdown the executor
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                System.out.println("Thread interrupted");
+            }
 		}
 	}
 
