@@ -3,15 +3,12 @@ SplitFileClient.java
 20190532 sang yun lee
 */
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -231,8 +228,6 @@ class SplitFileClient {
 		System.out.println("Request to server to get : " + fileName);
 		try (
 			Socket socket = new Socket(serverName, Integer.parseInt(serverPort));
-			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			InputStream is = socket.getInputStream();
 			OutputStream os = socket.getOutputStream();
 		) {
@@ -249,15 +244,18 @@ class SplitFileClient {
 				throw new IOException();
 			}
 			
+			// extract fileName, fileExtension, formating
 			int idx = fileName.lastIndexOf('.');
 			String fileExtension = fileName.substring(idx);
 			fileName = fileName.substring(0, idx);
 			fileName = String.format("%s-part%d%s", fileName, part + 1, fileExtension);
-			out.println(fileName);
+			os.write(fileName.getBytes());
 			// get file Size from server
-			String fileSizeBuffer = in.readLine();
-			long fileSize = Long.parseLong(fileSizeBuffer);
-			out.println("ok");
+			byte[] fileSizeBuffer = new byte[1024];
+			read = is.read(fileSizeBuffer);
+			String fileSizeString = new String(fileSizeBuffer, 0, read);
+			long fileSize = Long.parseLong(fileSizeString);
+			os.write("ok".getBytes());
 			
 			
 			// get file Object

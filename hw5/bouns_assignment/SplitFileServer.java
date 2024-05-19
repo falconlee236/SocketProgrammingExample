@@ -1,12 +1,9 @@
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -31,8 +28,6 @@ class SplitFileServer {
 			while (true) { 
 				// accept client request
 				Socket clientSocket = serverSocket.accept();
-				BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-				PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 				InputStream is = clientSocket.getInputStream();
 				OutputStream os = clientSocket.getOutputStream();
 				int read;
@@ -77,18 +72,22 @@ class SplitFileServer {
 						System.out.println(fileName + " file store sucessful!");
 					}
 					case "get" -> {
-						String fileName = in.readLine();
+						byte[] fileNameBuffer = new byte[1024];
+						read = is.read(fileNameBuffer);
+						String fileName = new String(fileNameBuffer, 0, read);
 						File srcFile = new File(fileName);
 						if (srcFile.exists() && srcFile.isFile()){
 							long size = srcFile.length();
-							out.println(Long.toString(size));
+							os.write(Long.toString(size).getBytes());
 						} else {
-							out.println("fail to get file Size");
+							os.write("fail to get file Size".getBytes());
 							continue;
 						}
 						System.out.println("Request from client to send: " + fileName);
 
-						String statusRes = in.readLine();
+						byte[] statusResBuffer = new byte[1024];
+						read = is.read(statusResBuffer);
+						String statusRes = new String(statusResBuffer, 0, read);
 						if (!statusRes.equals("ok")){
 							continue;
 						}
