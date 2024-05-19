@@ -145,6 +145,7 @@ class SplitFileClient {
 
 	// put file to server
 	private static void sendFile(String fileName, String serverName, String serverPort, int part){
+		// connet to TCP Server
 		try (
 			Socket socket = new Socket(serverName, Integer.parseInt(serverPort));
 			OutputStream os = socket.getOutputStream();
@@ -160,20 +161,26 @@ class SplitFileClient {
 			byte[] commandBuffer = new byte[1024];
 			read = is.read(commandBuffer);
 			String commandRes = new String(commandBuffer, 0, read);
+			// server response is not ok
 			if (!commandRes.equals("ok")){
 				System.out.println("fail to receive fileName");
 				throw new IOException();
 			}
 			System.out.println("Request to server to put :" + fileName);
+
 			// get file Object
 			File srcFile = new File(fileName);
 
+			// extract fileExtension from fileName
 			int idx = fileName.lastIndexOf('.');
 			String fileExtension = fileName.substring(idx);
+			// get fileName without extension from fileName
 			fileName = fileName.substring(0, idx);
+			// join that strings
 			fileName = String.format("%s-part%d%s", fileName, part + 1, fileExtension);
+			// send file Name to server
 			os.write(fileName.getBytes());
-			// get from server
+			// get from response
 			byte[] fileNameBuffer = new byte[1024];
 			read = is.read(fileNameBuffer);
 			String fileNameRes = new String(fileNameBuffer, 0, read);
@@ -182,9 +189,13 @@ class SplitFileClient {
 				throw new IOException();
 			}
 
+			// try to get fileSize
 			if (srcFile.exists() && srcFile.isFile()){
+				// get file Size
 				long size = srcFile.length();
+				// send fileSize to server
 				os.write(Long.toString(size).getBytes());
+				// wait response from server
 				byte[] fileSizeResBuffer = new byte[1024];
 				read = is.read(fileSizeResBuffer);
 				String fileSizeRes = new String(fileSizeResBuffer, 0, read);
@@ -194,9 +205,11 @@ class SplitFileClient {
 				}
 			}
 
+			// create fileInputStream object using Input data to file
 			try (FileInputStream fis = new FileInputStream(srcFile)){
 				int byteCount = 0;
 				byte[] b = new byte[1];
+				// get 1 byte from origin file
 				while (fis.read(b) > 0){
 					if (byteCount % 2 == part){
 						os.write(b);
@@ -208,7 +221,6 @@ class SplitFileClient {
 				System.out.println("File Error");
 				System.exit(1);
 			}
-
 		} catch(IOException e){
 			System.out.println("fail to connect server");
 			System.exit(1);

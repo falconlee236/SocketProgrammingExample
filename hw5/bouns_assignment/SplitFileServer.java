@@ -24,11 +24,12 @@ class SplitFileServer {
 		}
 		// server Port
 		String serverPort = args[0];
-		try (
+		try ( // create server Socket
 			ServerSocket serverSocket = new ServerSocket(Integer.parseInt(serverPort))
 		){
 			System.out.println("wait for client request");
 			while (true) { 
+				// accept client request
 				Socket clientSocket = serverSocket.accept();
 				BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 				PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -39,27 +40,32 @@ class SplitFileServer {
 				byte[] commandBuffer = new byte[1024];
 				read = is.read(commandBuffer);
 				String commandName = new String(commandBuffer, 0, read);
+				// send ok to client
 				os.write("ok".getBytes());
 				
+				// commandName case divide
 				switch (commandName){
 					case "put" -> {
+						// get fileName from client
 						byte[] fileNameBuffer = new byte[1024];
 						read = is.read(fileNameBuffer);
 						String fileName = new String(fileNameBuffer, 0, read);
 						os.write("ok".getBytes());
-										
-
+						// get fileSize from client
 						byte[] fileSizeBuffer = new byte[1024];
 						read = is.read(fileSizeBuffer);
 						String fileSizeString = new String(fileSizeBuffer, 0, read);
 						os.write("ok".getBytes());
+						// create FileOutputStream object write byte to File
 						try (
 							FileOutputStream fos = new FileOutputStream(fileName)
 						){
+							// convert String to int 
 							int fileSize = Integer.parseInt(fileSizeString);
 							long receivedBytes = 0;
 							byte[] buffer = new byte[1024];
 							int bytesRead;
+							// read byte from client
 							while (receivedBytes < fileSize && (bytesRead = is.read(buffer)) != -1) {
 								fos.write(buffer, 0, bytesRead);
 								receivedBytes += bytesRead;
