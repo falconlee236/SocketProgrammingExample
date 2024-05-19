@@ -34,10 +34,12 @@ class SplitFileServer {
 				PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
 				InputStream is = clientSocket.getInputStream();
 				OutputStream os = clientSocket.getOutputStream();
-				
+				int read;
 				// get command from client
-				String commandName = in.readLine();
-				out.println("ok");
+				byte[] commandBuffer = new byte[1024];
+				read = is.read(commandBuffer);
+				String commandName = new String(commandBuffer, 0, read);
+				os.write("ok".getBytes());
 				
 				switch (commandName){
 					case "put" -> {
