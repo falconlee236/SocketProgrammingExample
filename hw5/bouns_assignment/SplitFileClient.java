@@ -174,9 +174,11 @@ class SplitFileClient {
 			String fileExtension = fileName.substring(idx);
 			fileName = fileName.substring(0, idx);
 			fileName = String.format("%s-part%d%s", fileName, part + 1, fileExtension);
-			out.println(fileName);
+			os.write(fileName.getBytes());
 			// get from server
-			String fileNameRes = in.readLine();
+			byte[] fileNameBuffer = new byte[1024];
+			read = is.read(fileNameBuffer);
+			String fileNameRes = new String(fileNameBuffer, 0, read);
 			if (!fileNameRes.equals("ok")){
 				System.out.println("fail to receive fileName");
 				throw new IOException();

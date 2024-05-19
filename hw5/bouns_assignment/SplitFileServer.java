@@ -43,8 +43,10 @@ class SplitFileServer {
 				
 				switch (commandName){
 					case "put" -> {
-						String fileName = in.readLine();
-						out.println("ok");
+						byte[] fileNameBuffer = new byte[1024];
+						read = is.read(fileNameBuffer);
+						String fileName = new String(fileNameBuffer, 0, read);
+						os.write("ok".getBytes());
 										
 						String fileSizeBuffer = in.readLine();
 						out.println("ok");
