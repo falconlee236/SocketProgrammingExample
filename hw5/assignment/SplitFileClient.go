@@ -215,7 +215,7 @@ func sendFile(fileName string, serverName string, serverPort string, part int, w
 	fileSizeBuffer := make([]byte, 1024)
 	read, _ = conn.Read(fileSizeBuffer)
 	if string(fileSizeBuffer[:read]) != "ok" {
-		fmt.Println("fail to receive fileName")
+		fmt.Println("fail to receive fileSize")
 		os.Exit(1)
 	}
 
