@@ -234,12 +234,16 @@ class SplitFileClient {
 			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			InputStream is = socket.getInputStream();
+			OutputStream os = socket.getOutputStream();
 		) {
+			int read;
 			String commandStr = "get";
 			// send to server
-			out.println(commandStr);
+			os.write(commandStr.getBytes());
 			// get from server
-			String commandRes = in.readLine();
+			byte[] commandResBuffer = new byte[1024];
+			read = is.read(commandResBuffer);
+			String commandRes = new String(commandResBuffer, 0, read);
 			if (!commandRes.equals("ok")){
 				System.out.println("fail to receive fileName");
 				throw new IOException();
