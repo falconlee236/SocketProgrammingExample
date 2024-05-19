@@ -46,6 +46,7 @@ class SplitFileServer {
 						read = is.read(fileNameBuffer);
 						String fileName = new String(fileNameBuffer, 0, read);
 						os.write("ok".getBytes());
+						System.out.println("Recieved file: " + fileName);
 						// get fileSize from client
 						byte[] fileSizeBuffer = new byte[1024];
 						read = is.read(fileSizeBuffer);
