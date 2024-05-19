@@ -41,10 +41,10 @@ fn send_file(file_name: &str, server_name: &str, server_port: &str, part: i32){
 	// prepare command string to send command
 	let command_str = "put";
 	// write to server
-	if client_socket.write(command_str.as_bytes()).is_err() {};
+	client_socket.write(command_str.as_bytes()).unwrap();
 	// read from server
 	let mut command_buffer = vec![0; MSG_SIZE];
-	if client_socket.read(&mut command_buffer).is_err() {};
+	client_socket.read(&mut command_buffer).unwrap();
 	let command_res = command_buffer.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
 	let command_res = String::from_utf8(command_res).expect("invalid utf8 message");
 	// server response is not ok
@@ -71,10 +71,10 @@ fn send_file(file_name: &str, server_name: &str, server_port: &str, part: i32){
 	let file_name = &file_name[0..(file_name.len() - file_extension.len())];
 	let file_name = format!("{}-part{}{}", file_name, part + 1, file_extension);
 	// write to server
-	if client_socket.write(file_name.as_bytes()).is_err() {};
+	client_socket.write(file_name.as_bytes()).unwrap();
 	// read from server
 	let mut filename_buffer = vec![0; MSG_SIZE];
-	if client_socket.read(&mut filename_buffer).is_err() {};
+	client_socket.read(&mut filename_buffer).unwrap();
 	let filename_res = filename_buffer.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
 	let filename_res = String::from_utf8(filename_res).expect("invalid utf8 message");
 	// server response is not ok
@@ -88,10 +88,10 @@ fn send_file(file_name: &str, server_name: &str, server_port: &str, part: i32){
 		Ok(metadata) => metadata.len(),
 		Err(_) => 0
 	}.to_string();
-	if client_socket.write(file_size.as_bytes()).is_err() {};
+	client_socket.write(file_size.as_bytes()).unwrap();
 	// read from server
 	let mut filesize_buffer = vec![0; MSG_SIZE];
-	if client_socket.read(&mut filesize_buffer).is_err() {};
+	client_socket.read(&mut filesize_buffer).unwrap();
 	let filesize_res = filesize_buffer.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
 	let filesize_res = String::from_utf8(filesize_res).expect("invalid utf8 message");
 	// server response is not ok
@@ -110,7 +110,7 @@ fn send_file(file_name: &str, server_name: &str, server_port: &str, part: i32){
             Ok(_) => {
                 let byte = buffer[0];
                 if byte_cnt % 2 == part {
-					if client_socket.write(&[byte]).is_err() {};
+					client_socket.write(&[byte]).unwrap();
 				}
             }
             Err(error) => {
