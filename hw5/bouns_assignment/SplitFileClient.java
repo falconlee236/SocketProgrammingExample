@@ -4,10 +4,13 @@ SplitFileClient.java
 */
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Arrays;
 
 class SplitFileClient {
 	public static void main(String[] args) {
@@ -23,11 +26,13 @@ class SplitFileClient {
 		// server Info hardcoding
 		String firstServerName = "127.0.0.1";
 		String firstServerPort = "40532";
+		String secondServerName = "127.0.0.1";
 		String secondServerPort = "50532";
 
 		// put command case
 		if (commandName.equals("put")){
 			sendFile(fileName, firstServerName, firstServerPort, 0);
+			sendFile(fileName, secondServerName, secondServerPort, 1);
 		}
 	}
 
@@ -38,15 +43,59 @@ class SplitFileClient {
 			PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))
 		) {
+			String commandStr = "put";
+			// send to server
+			out.print(commandStr);
+			// get from server
+			String commandRes = in.readLine();
+			if (!commandRes.equals("ok")){
+				System.out.println("fail to receive fileName");
+				throw new IOException();
+			}
+			System.out.println("Request to server to put :" + fileName);
+			// get file Object
+			File srcFile = new File(fileName);
+
+			int idx = fileName.lastIndexOf('.');
+			String fileExtension = fileName.substring(idx+1);
+			fileName = fileName.substring(0, idx);
+			fileName = String.format("%s-part%d%s", fileName, part + 1, fileExtension);
+			out.print(fileName);
+			// get from server
+			String fileNameRes = in.readLine();
+			if (!fileNameRes.equals("ok")){
+				System.out.println("fail to receive fileName");
+				throw new IOException();
+			}
+
+			if (srcFile.exists() && srcFile.isFile()){
+				long size = srcFile.length();
+				out.print(Long.toString(size));
+				String fileSizeRes = in.readLine();
+				if (!fileSizeRes.equals("ok")){
+					System.out.println("fail to receive fileSize");
+					throw new IOException();
+				}
+			}
+
+			try (FileInputStream fis = new FileInputStream(srcFile)){
+				int byteCount = 0;
+				byte[] b = new byte[1];
+				while (fis.read(b) > 0){
+					if (byteCount % 2 == part){
+						out.print(Arrays.toString(b));
+					}
+					byteCount++;
+				}
+				System.out.println(fileName + " send successful");
+			} catch (Exception e) {
+				System.out.println("File Error");
+				System.exit(1);
+			}
 
 		} catch(IOException e){
-			System.out.println("failt to connect server");
+			System.out.println("fail to connect server");
 			System.exit(1);
 		}
 	}
 }
-
-/*!SECTION
- * PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-			BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream())
- */
