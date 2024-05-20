@@ -32,6 +32,9 @@ fn main() {
 	if command_name == "put" {
 		send_file(file_name, SERVER_IP1, SERVER_PORT1, 0);
 		send_file(file_name, SERVER_IP2, SERVER_PORT2, 1);
+	} else if command_name == "get" {
+		receive_file(file_name, SERVER_IP1, SERVER_PORT1, 0);
+		receive_file(file_name, SERVER_IP2, SERVER_PORT2, 1);
 	}
 }
 
@@ -121,4 +124,80 @@ fn send_file(file_name: &str, server_name: &str, server_port: &str, part: i32){
 		byte_cnt += 1;
     }
 	println!("{} send sucessful!", file_name);
+}
+
+fn receive_file(file_name: &str, server_name: &str, server_port: &str, part: i32){
+	println!("Request to server to get : {}", file_name);
+
+	// create client socket
+	let mut client_socket = TcpStream::connect(format!("{}:{}", server_name, server_port)).expect("stream failed to connect");
+	// prepare command string to send command
+	let command_str = "get";
+	client_socket.write(command_str.as_bytes()).unwrap();
+	// read from server
+	let mut command_buffer = vec![0; MSG_SIZE];
+	client_socket.read(&mut command_buffer).unwrap();
+	let command_res = command_buffer.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
+	let command_res = String::from_utf8(command_res).expect("invalid utf8 message");
+	// server response is not ok
+	if command_res != "ok" {
+		println!("fail to receive command name");
+		exit(1);
+	}
+
+	// get file extension from fileName
+	let file_extension = match Path::new(file_name).extension().and_then(|s| s.to_str()) {
+		Some(ext) => ".".to_string() + ext,
+		None => "".to_string()
+	};
+	let file_name = &file_name[0..(file_name.len() - file_extension.len())];
+	let file_name = format!("{}-part{}{}", file_name, part + 1, file_extension);
+	// send file name to server
+	client_socket.write(file_name.as_bytes()).unwrap();
+
+	// try to get file size
+	let mut filesize_buffer = vec![0; MSG_SIZE];
+	client_socket.read(&mut filesize_buffer).unwrap();
+	let filesize_res = filesize_buffer.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
+	let filesize = String::from_utf8(filesize_res).expect("invalid utf8 message");
+	// parse file size string to long
+	let file_size: u64 = match filesize.parse() {
+		Ok(n) => {
+			client_socket.write("ok".as_bytes()).unwrap();
+			n
+		}
+		Err(e) => {
+            eprintln!("convert error : {}", e);
+            exit(1);
+        }
+	};
+
+	// file create
+	match File::create(format!("{}tmp{}", &file_name, file_extension)) {
+		Ok(mut file) => {
+			let mut received_bytes = 0;
+			let mut buffer = vec![0; MSG_SIZE];
+			while received_bytes < file_size {
+				match client_socket.read(&mut buffer) {
+					Ok(n) => {
+						if n == 0 {
+							break;
+						}
+						file.write_all(&buffer[..n]).unwrap();
+						received_bytes += n as u64;
+					},
+					Err(e) => {
+						println!("Error occurred: {:?}", e);
+						continue;
+					}
+				}
+			}
+		},
+		Err(error) => {
+			eprintln!("File open Error: {}", error);
+			exit(1);
+		}
+	};
+	println!("{} file store successful!", file_name);
+
 }
