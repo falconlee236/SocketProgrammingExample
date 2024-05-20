@@ -102,8 +102,10 @@ fn main() {
 				// try to open file
 				let src_file = match File::open(&file_name) {
 					Ok(file) => {
+						// try to get file metadata
 						match file.metadata() {
 							Ok(metadata) => {
+								// send file size to client
 								socket.write(metadata.len().to_string().as_bytes()).unwrap();
 								file
 							},
@@ -127,11 +129,13 @@ fn main() {
 				socket.read(&mut status_buffer).unwrap();
 				let status_res = status_buffer.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
 				let status_res = String::from_utf8(status_res).expect("invalid utf8 message");
+				// client status check
 				if status_res != "ok" {
 					eprintln!("fail to receive file size");
 					continue;
 				}
 
+				// set Reader Buffer in file
 				let mut reader = BufReader::new(src_file);
 				let mut buffer = [0; 1];
 				loop {
