@@ -5,7 +5,7 @@ SplitFileServer.rs
 
 use std::env::args;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::{Read, Write, BufReader};
 use std::net::TcpListener;
 use std::process::exit;
 
@@ -91,6 +91,69 @@ fn main() {
 					}
 				};
 				println!("{} save successful!", file_name);
+			} else if command_name == "get" {
+				//get file Name from client
+				// read from client
+				let mut filename_buffer = vec![0; MSG_SIZE];
+				socket.read(&mut filename_buffer).unwrap();
+				let file_name = filename_buffer.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
+				let file_name = String::from_utf8(file_name).expect("invalid utf8 message");
+
+				// try to open file
+				let src_file = match File::open(&file_name) {
+					Ok(file) => {
+						match file.metadata() {
+							Ok(metadata) => {
+								socket.write(metadata.len().to_string().as_bytes()).unwrap();
+								file
+							},
+							Err(err) => {
+								eprintln!("fail to get file size: {}", err);
+								socket.write("error!".as_bytes()).unwrap();		
+								continue;
+							}
+						}
+					},
+					Err(err) => {
+						eprintln!("fail to open file: {}", err);
+						socket.write("error!".as_bytes()).unwrap();
+						continue;
+					}
+				};
+
+				println!("Request from client to send : {}", &file_name);
+				// read from client
+				let mut status_buffer = vec![0; MSG_SIZE];
+				socket.read(&mut status_buffer).unwrap();
+				let status_res = status_buffer.into_iter().take_while(|&x| x != 0).collect::<Vec<_>>();
+				let status_res = String::from_utf8(status_res).expect("invalid utf8 message");
+				if status_res != "ok" {
+					eprintln!("fail to receive file size");
+					continue;
+				}
+
+				let mut reader = BufReader::new(src_file);
+				let mut buffer = [0; 1];
+				loop {
+					// read 1 byte from file
+					match reader.read(&mut buffer) {
+						// EOF
+						Ok(0) => {
+							println!("{} send successful!", file_name);
+							break
+						},
+						Ok(_) => {
+							let byte = buffer[0];
+							socket.write(&[byte]).unwrap();
+						}
+						Err(error) => {
+							eprintln!("read failed: {}", error);
+							break;
+						}
+					}
+				}
+			} else {
+				println!("Unknown command!: {}", command_name);
 			}
 		}
 	}
