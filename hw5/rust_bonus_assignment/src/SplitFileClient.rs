@@ -9,6 +9,7 @@ use std::net::TcpStream;
 use std::path::Path;
 use std::process::exit;
 use std::fs::File;
+use std::thread;
 
 // message buffer size
 const MSG_SIZE: usize = 1024;
@@ -27,14 +28,30 @@ fn main() {
 	}
 	// get argument from system args
 	let command_name = &args[1];
-	let file_name = &args[2];
+	let file_name = args[2].clone();
 
 	if command_name == "put" {
-		send_file(file_name, SERVER_IP1, SERVER_PORT1, 0);
-		send_file(file_name, SERVER_IP2, SERVER_PORT2, 1);
+		let file_name1 = file_name.clone();
+		let file_name2 = file_name.clone();
+		let handle1 = thread::spawn(move || {
+			send_file(&file_name1, SERVER_IP1, SERVER_PORT1, 0);
+		});
+		let handle2 = thread::spawn(move || {
+			send_file(&file_name2, SERVER_IP2, SERVER_PORT2, 1);
+		});
+		handle1.join().unwrap();
+        handle2.join().unwrap();
 	} else if command_name == "get" {
-		receive_file(file_name, SERVER_IP1, SERVER_PORT1, 0);
-		receive_file(file_name, SERVER_IP2, SERVER_PORT2, 1);
+		let file_name1 = file_name.clone();
+		let file_name2 = file_name.clone();
+		let handle1 = thread::spawn(move || {
+			receive_file(&file_name1, SERVER_IP1, SERVER_PORT1, 0);
+		});
+		let handle2 = thread::spawn(move || {
+			receive_file(&file_name2, SERVER_IP2, SERVER_PORT2, 1);
+		});
+		handle1.join().unwrap();
+        handle2.join().unwrap();
 	}
 }
 
