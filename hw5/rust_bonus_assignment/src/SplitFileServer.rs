@@ -64,8 +64,8 @@ fn main() {
 					}
 				};
 
-				// file open
-				match File::open(file_name) {
+				// file create
+				match File::create(&file_name) {
 					Ok(mut file) => {
 						let mut received_bytes = 0;
 						let mut buffer = vec![0; MSG_SIZE];
@@ -90,6 +90,7 @@ fn main() {
 						exit(1);
 					}
 				};
+				println!("{} save successful!", file_name);
 			}
 		}
 	}

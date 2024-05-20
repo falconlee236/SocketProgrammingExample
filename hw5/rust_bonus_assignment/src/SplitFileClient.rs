@@ -82,7 +82,7 @@ fn send_file(file_name: &str, server_name: &str, server_port: &str, part: i32){
 		println!("fail to receive file name");
 		exit(1);
 	}
-
+	
 	// get file size from File object metadata
 	let file_size = match src_file.metadata() {
 		Ok(metadata) => metadata.len(),
@@ -99,12 +99,12 @@ fn send_file(file_name: &str, server_name: &str, server_port: &str, part: i32){
 		println!("fail to receive file name");
 		exit(1);
 	}
-
+	
 	let mut reader = BufReader::new(src_file);
     let mut buffer = [0; 1];
 	let mut byte_cnt = 0;
     loop {
-        // read 1 byte from file
+		// read 1 byte from file
         match reader.read(&mut buffer) {
             Ok(0) => break, // EOF
             Ok(_) => {
