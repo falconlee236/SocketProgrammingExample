@@ -9,6 +9,7 @@ use std::net::TcpStream;
 use std::path::Path;
 use std::process::exit;
 use std::fs::File;
+use std::fs::remove_file;
 use std::thread;
 
 // message buffer size
@@ -64,14 +65,14 @@ fn main() {
 		let tmp_file_name1 = format!("{}-part{}{}tmp{}", &file_name, 1, file_extension, file_extension);
 		let tmp_file_name2 = format!("{}-part{}{}tmp{}", &file_name, 2, file_extension, file_extension);
 		// file open
-		let tmp_file1 = match File::open(tmp_file_name1) {
+		let tmp_file1 = match File::open(&tmp_file_name1) {
 			Ok(file) => file,
 			Err(error) => {
 				eprintln!("File open Error: {}", error);
 				exit(1);
 			}
 		};
-		let tmp_file2 = match File::open(tmp_file_name2) {
+		let tmp_file2 = match File::open(&tmp_file_name2) {
 			Ok(file) => file,
 			Err(error) => {
 				eprintln!("File open Error: {}", error);
@@ -124,6 +125,20 @@ fn main() {
 					byte_cnt += 1;
 				}
 				println!("{}{} file merge sucessful!", file_name, file_extension);
+				match remove_file(tmp_file_name1) {
+					Ok(_) => println!("tmp1 file remove sucess!"),
+					Err(_) => {
+						eprintln!("tmp1 file remove failed!");
+						exit(1);
+					}
+				};
+				match remove_file(tmp_file_name2) {
+					Ok(_) => println!("tmp2 file remove sucess!"),
+					Err(_) => {
+						eprintln!("tmp2 file remove failed!");
+						exit(1);
+					}
+				};
 			},
 			Err(e) => {
 				eprintln!("file creation error: {}", e);
