@@ -52,6 +52,86 @@ fn main() {
 		});
 		handle1.join().unwrap();
         handle2.join().unwrap();
+
+		// get file extension from fileName
+		let file_extension = match Path::new(&file_name).extension().and_then(|s| s.to_str()) {
+			Some(ext) => ".".to_string() + ext,
+			None => "".to_string()
+		};
+		let file_name = &file_name[0..(file_name.len() - file_extension.len())];
+		let file_name = format!("{}-merged{}", file_name, file_extension);
+		// set tmp file name
+		let tmp_file_name1 = format!("{}-part{}{}tmp{}", &file_name, 1, file_extension, file_extension);
+		let tmp_file_name2 = format!("{}-part{}{}tmp{}", &file_name, 2, file_extension, file_extension);
+		// file open
+		let tmp_file1 = match File::open(tmp_file_name1) {
+			Ok(file) => file,
+			Err(error) => {
+				eprintln!("File open Error: {}", error);
+				exit(1);
+			}
+		};
+		let tmp_file2 = match File::open(tmp_file_name2) {
+			Ok(file) => file,
+			Err(error) => {
+				eprintln!("File open Error: {}", error);
+				exit(1);
+			}
+		};
+		// dst file create
+		match File::create(&file_name) {
+			Ok(mut dst_file) => {
+				let mut reader1 = BufReader::new(tmp_file1);
+				let mut reader2 = BufReader::new(tmp_file2);
+
+				let mut byte_cnt: i64 = 0;
+				let mut finish_cnt: i32 = 0;
+				while finish_cnt != 2 {
+					let mut buffer = [0; 1];
+					if byte_cnt % 2 == 0 {
+						// read 1 byte from file
+						match reader1.read(&mut buffer) {
+							Ok(0) => { // EOF
+								finish_cnt += 1;
+								continue;
+							},
+							Ok(_) => {
+								let byte = buffer[0];
+								dst_file.write(&[byte]).unwrap();
+							}
+							Err(error) => {
+								eprintln!("tmp file 1read failed: {}", error);
+								exit(1);
+							}
+						}
+					} else {
+						// read 1 byte from file
+						match reader2.read(&mut buffer) {
+							Ok(0) => { // EOF
+								finish_cnt += 1;
+								continue;
+							},
+							Ok(_) => {
+								let byte = buffer[0];
+								dst_file.write(&[byte]).unwrap();
+							}
+							Err(error) => {
+								eprintln!("tmp file 1read failed: {}", error);
+								exit(1);
+							}
+						}
+					}
+					byte_cnt += 1;
+				}
+				println!("{}{} file merge sucessful!", file_name, file_extension);
+			},
+			Err(e) => {
+				eprintln!("file creation error: {}", e);
+				exit(1);
+			}
+		}
+	} else {
+		println!("Invalid argument");
 	}
 }
 
