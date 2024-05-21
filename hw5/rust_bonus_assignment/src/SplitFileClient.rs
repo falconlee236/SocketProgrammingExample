@@ -60,22 +60,23 @@ fn main() {
 			None => "".to_string()
 		};
 		let file_name = &file_name[0..(file_name.len() - file_extension.len())];
-		let file_name = format!("{}-merged{}", file_name, file_extension);
 		// set tmp file name
 		let tmp_file_name1 = format!("{}-part{}{}tmp{}", &file_name, 1, file_extension, file_extension);
 		let tmp_file_name2 = format!("{}-part{}{}tmp{}", &file_name, 2, file_extension, file_extension);
+		// make result file name
+		let file_name = format!("{}-merged{}", file_name, file_extension);
 		// file open
 		let tmp_file1 = match File::open(&tmp_file_name1) {
 			Ok(file) => file,
 			Err(error) => {
-				eprintln!("File open Error: {}", error);
+				eprintln!("{} File open Error: {}", &tmp_file_name1, error);
 				exit(1);
 			}
 		};
 		let tmp_file2 = match File::open(&tmp_file_name2) {
 			Ok(file) => file,
 			Err(error) => {
-				eprintln!("File open Error: {}", error);
+				eprintln!("{} File open Error: {}", &tmp_file_name2, error);
 				exit(1);
 			}
 		};
