@@ -1,3 +1,7 @@
+/*
+SplitFileServer.java
+20190532 sang yun lee
+*/
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -7,10 +11,6 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-/*
-SplitFileServer.java
-20190532 sang yun lee
-*/
 
 class SplitFileServer {
 	public static void main(String[] args){
