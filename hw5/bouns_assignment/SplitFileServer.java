@@ -40,7 +40,7 @@ class SplitFileServer {
 				
 				// commandName case divide
 				switch (commandName){
-					case "put" -> {
+					case "put": {
 						// get fileName from client
 						byte[] fileNameBuffer = new byte[1024];
 						read = is.read(fileNameBuffer);
@@ -71,8 +71,9 @@ class SplitFileServer {
 							continue;
 						}
 						System.out.println(fileName + " file store sucessful!");
+						break;
 					}
-					case "get" -> {
+					case "get" : {
 						byte[] fileNameBuffer = new byte[1024];
 						read = is.read(fileNameBuffer);
 						String fileName = new String(fileNameBuffer, 0, read);
@@ -103,9 +104,9 @@ class SplitFileServer {
 							System.out.println("read Error!");
 							continue;
 						}
-						
+						break;
 					}
-					default -> System.out.println("Invalid command");
+					default : System.out.println("Invalid command");
 				}
 			}
 		} catch (Exception e) {
