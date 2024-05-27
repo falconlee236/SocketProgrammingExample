@@ -27,9 +27,9 @@ class SplitFileClient {
 		final String threadFileName = fileName;
 
 		// server Info hardcoding
-		String firstServerName = "127.0.0.1";
+		String firstServerName = "nsl2.cau.ac.kr";
 		String firstServerPort = "40532";
-		String secondServerName = "127.0.0.1";
+		String secondServerName = "nsl5.cau.ac.kr";
 		String secondServerPort = "50532";
 
 		ExecutorService executor = Executors.newFixedThreadPool(2);

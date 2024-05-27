@@ -26,9 +26,9 @@ func main() {
 	fileName := os.Args[2]
 
 	// server Info hardcoding
-	firstServerName := "127.0.0.1"
+	firstServerName := "nsl2.cau.ac.kr"
 	firstServerPort := "40532"
-	secondServerName := "127.0.0.1"
+	secondServerName := "nsl5.cau.ac.kr"
 	secondServerPort := "50532"
 
 	var wg sync.WaitGroup

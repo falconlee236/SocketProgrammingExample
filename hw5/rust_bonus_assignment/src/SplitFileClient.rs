@@ -15,9 +15,9 @@ use std::thread;
 // message buffer size
 const MSG_SIZE: usize = 1024;
 // server info
-const SERVER_IP1: &str = "127.0.0.1";
+const SERVER_IP1: &str = "nsl2.cau.ac.kr";
 const SERVER_PORT1: &str = "40532";
-const SERVER_IP2: &str = "127.0.0.1";
+const SERVER_IP2: &str = "nsl5.cau.ac.kr";
 const SERVER_PORT2: &str = "50532";
 
 fn main() {
